@@ -1,0 +1,16 @@
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+
+# C/C++
+*.o
+*.out
+*.exe
+
+# IDEs
+.vscode/
