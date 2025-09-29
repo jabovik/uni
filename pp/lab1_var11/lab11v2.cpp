@@ -22,12 +22,11 @@ void delete_matrix(double **mat, int rows) // функция освобожде�
     }
     delete[] mat;
 }
-
-template <typename T>
-T safe_input(bool positive_only) // шаблонная функция безопасного ввода
+//шаблонная функция безопасного ввода
+template <typename T> T safe_input()
 {
     T input;
-    while (!(cin >> input) || (positive_only && input <= 0))
+    while (!(cin >> input))
     {
         cin.clear();                                         // сброс состояния ошибки
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); // очистка потока ввода
@@ -38,38 +37,42 @@ T safe_input(bool positive_only) // шаблонная функция безоп
 
 int main(int argc, char const *argv[])
 {
-    char choice = 'y';
-    while (choice == 'y') // цикл для повторного ввода матрицы
+    char choice;
+    do // цикл для повторного ввода матрицы
     {
         int m, n; // m - количество строк, n - количество столбцов в исходной матрице
         cout << "Enter number of rows and columns: " << endl;
-        m = safe_input<int>(true);
-        n = safe_input<int>(true);
-        double **mat = new double *[n] {}; // создаём пустую транспонированную матрицу с числом строк = n
+        do
+        {
+            m = safe_input<int>();
+            n = safe_input<int>();
+            if (m < 1 || n < 1 || m*n < 2)
+                cout << "Invalid input, try again" << endl;
+        } while (m < 1 || n < 1 || m*n < 2);
+        double **mat = new double *[n] {}; // создаём пустую транспонированную матрицу с числом строк n
         cout << "Enter matrix elements: " << endl;
         for (int i = 0; i < n; ++i)
         {
-            mat[i] = new double[m]{}; // число столбцов в новой матрице = m
+            mat[i] = new double[m]{}; // число столбцов в новой матрице - m
         }
 
         for (int i = 0; i < m; ++i)
         {
             for (int j = 0; j < n; ++j)
             {
-                mat[j][i] = safe_input<double>(false); // матрица заполняется и сразу транспонируется
+                mat[j][i] = safe_input<double>(); // матрица заполняется транспонированной
             }
         }
         cout << "Transposed matrix: " << endl;
         draw(mat, n, m);
         delete_matrix(mat, n);
-        cout << "Continue? (y/n)" << endl;
-        cin >> choice;
-        while (choice != 'y' && choice != 'n')
+        cout << "Continue? ";
+        do
         {
-            cout << "y/n" << endl;
+            cout << "(y/n)" << endl;
+            choice = safe_input<char>();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin >> choice;
-        }
-    }
+        } while (choice != 'y' && choice != 'n');
+    } while (choice == 'y');
     return 0;
 }

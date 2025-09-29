@@ -25,7 +25,7 @@ class Time
                 ++count;
             }
         }
-        if (count != 2 || numbers != 6)
+        if (count != 2 || numbers != 6 || str.length()!=8)
         {
             throw invalid_argument("Invalid time format");
         }
