@@ -35,6 +35,20 @@ T safe_input()
     return input;
 }
 
+bool no_more_args()
+{
+    char x;
+    while(cin.peek() == ' ') cin.get();
+    if (cin.peek() != '\n')
+    {
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Error: Too many args" << endl;
+        cout << "Enter the numbers again: " << endl;
+        return false;
+    }
+    return true;
+}
+
 int main(int argc, char const *argv[])
 {
     char choice;
@@ -47,7 +61,7 @@ int main(int argc, char const *argv[])
         {
             entry_error = false;
             try
-            { 
+            {
                 m = safe_input<int>();
                 n = safe_input<int>();
             }
@@ -57,8 +71,12 @@ int main(int argc, char const *argv[])
                 cout << "Error: " << e.what() << endl;
                 cout << "Enter the numbers again: " << endl;
             }
+            entry_error = entry_error || !no_more_args();
             if ((m < 1 || n < 1 || m * n < 2) && entry_error == false)
+            {
                 cout << "Invalid input, try again" << endl;
+                entry_error = true;
+            }
         } while ((m < 1 || n < 1 || m * n < 2) || entry_error == true);
         double **mat = new double *[n] {}; // создаём пустую транспонированную матрицу с числом строк n
         cout << "Enter matrix elements: " << endl;
@@ -67,26 +85,29 @@ int main(int argc, char const *argv[])
             mat[i] = new double[m]{}; // число столбцов в новой матрице - m
         }
         bool fill_error;
-        do{
+        do
+        {
             fill_error = false;
             for (int i = 0; i < m; ++i)
             {
                 for (int j = 0; j < n; ++j)
                 {
-                    try{
+                    try
+                    {
                         mat[j][i] = safe_input<double>(); // матрица заполняется транспонированной
                     }
-                    catch(const invalid_argument &e)
+                    catch (const invalid_argument &e)
                     {
                         fill_error = true;
                         cout << "Error " << e.what() << endl;
                         cout << "Enter the elements again" << endl;
-                        j=m;
-                        i=n;
+                        j = m;
+                        i = n;
                     }
                 }
             }
-        } while(fill_error);
+            fill_error = fill_error || !no_more_args();
+        } while (fill_error);
         cout << "Transposed matrix: " << endl;
         draw(mat, n, m);
         delete_matrix(mat, n);
