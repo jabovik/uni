@@ -1,7 +1,17 @@
+/*
+Практикум по программированию
+Лабораторная работа №1
+Вариант 11**
+----------------------------------------------------------
+Транспонирование матрицы без дополнительных массивов.
+Входные данные: размеры матрицы и матрица.
+Выходные данные: транспонированная матрица.
+*/
 #include <iostream>
 #include <limits>
 using namespace std;
-void draw(double **mat, int m, int n) // функция вывода матрицы
+// функция вывода матрицы
+void draw(double **mat, int m, int n)
 {
     for (int i = 0; i < m; ++i)
     {
@@ -12,8 +22,8 @@ void draw(double **mat, int m, int n) // функция вывода матри�
         cout << endl;
     }
 }
-
-void delete_matrix(double **mat, int rows) // функция освобождения памяти
+// функция освобождения памяти
+void delete_matrix(double **mat, int rows)
 {
     for (int i = 0; i < rows; ++i)
     {
@@ -34,11 +44,11 @@ T safe_input()
     }
     return input;
 }
-
+// функция проверки на наличие лишних аргументов в потоке
 bool no_more_args()
 {
     char x;
-    while(cin.peek() == ' ') cin.get();
+    while (cin.peek() == ' ') cin.get(); // пропускаем пробелы
     if (cin.peek() != '\n')
     {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -52,10 +62,10 @@ bool no_more_args()
 int main(int argc, char const *argv[])
 {
     char choice;
-    do // цикл для повторного ввода матрицы
+    do // цикл для повторного выполнения программы
     {
         int m, n; // m - количество строк, n - количество столбцов в исходной матрице
-        cout << "Enter number of rows and columns: " << endl;
+        cout << "Enter numbers of rows and columns: " << endl;
         bool entry_error;
         do
         {
@@ -72,12 +82,12 @@ int main(int argc, char const *argv[])
                 cout << "Enter the numbers again: " << endl;
             }
             entry_error = entry_error || !no_more_args();
-            if ((m < 1 || n < 1 || m * n < 2) && entry_error == false)
+            if (entry_error == false &&(m < 1 || n < 1 || m * n < 2))
             {
-                cout << "Invalid input, try again" << endl;
+                cout << "Invalid input, try again:" << endl;
                 entry_error = true;
             }
-        } while ((m < 1 || n < 1 || m * n < 2) || entry_error == true);
+        } while (entry_error); // повторяется пока не завершится без ошибок
         double **mat = new double *[n] {}; // создаём пустую транспонированную матрицу с числом строк n
         cout << "Enter matrix elements: " << endl;
         for (int i = 0; i < n; ++i)
@@ -100,18 +110,18 @@ int main(int argc, char const *argv[])
                     {
                         fill_error = true;
                         cout << "Error " << e.what() << endl;
-                        cout << "Enter the elements again" << endl;
+                        cout << "Enter the elements again:" << endl;
                         j = m;
                         i = n;
                     }
                 }
             }
             fill_error = fill_error || !no_more_args();
-        } while (fill_error);
+        } while (fill_error); // повторяется пока не завершится без ошибок
         cout << "Transposed matrix: " << endl;
-        draw(mat, n, m);
-        delete_matrix(mat, n);
-        cout << "Continue? (y/any other key to exit):";
+        draw(mat, n, m); // отрисовка матрицы
+        delete_matrix(mat, n); // очистка памяти
+        cout << "Continue? (y/any key):";
         cin >> choice;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     } while (choice == 'y');
