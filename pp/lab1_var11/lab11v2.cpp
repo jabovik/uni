@@ -2,6 +2,7 @@
 Практикум по программированию
 Лабораторная работа №1
 Вариант 11**
+Автор: Морозов Кирилл Константинович 6101-010302
 ----------------------------------------------------------
 Транспонирование матрицы без дополнительных массивов.
 Входные данные: размеры матрицы и матрица.
@@ -10,7 +11,10 @@
 #include <iostream>
 #include <limits>
 using namespace std;
-// функция вывода матрицы
+/// @brief функция вывода матрицы
+/// @param mat указатель на матрицу
+/// @param m количество строк в матрице
+/// @param n количество столбцов в матрице
 void draw(double **mat, int m, int n)
 {
     for (int i = 0; i < m; ++i)
@@ -22,7 +26,9 @@ void draw(double **mat, int m, int n)
         cout << endl;
     }
 }
-// функция освобождения памяти
+/// @brief функция освобождения памяти
+/// @param mat указатель на матрицу
+/// @param rows количество строк матрицы
 void delete_matrix(double **mat, int rows)
 {
     for (int i = 0; i < rows; ++i)
@@ -31,7 +37,10 @@ void delete_matrix(double **mat, int rows)
     }
     delete[] mat;
 }
-// шаблонная функция безопасного ввода
+
+/// @brief шаблонная функция безопасного ввода
+/// @tparam T - тип вводимой переменной
+/// @return обработанный ввод
 template <typename T>
 T safe_input()
 {
@@ -44,7 +53,8 @@ T safe_input()
     }
     return input;
 }
-// функция проверки на наличие лишних аргументов в потоке
+/// @brief функция проверки на наличие лишних аргументов в потоке
+/// @return true если нет больше аргументов, иначе false
 bool no_more_args()
 {
     char x;
@@ -82,7 +92,7 @@ int main(int argc, char const *argv[])
                 cout << "Enter the numbers again: " << endl;
             }
             entry_error = entry_error || !no_more_args();
-            if (entry_error == false &&(m < 1 || n < 1 || m * n < 2))
+            if (!entry_error &&(m < 1 || n < 1 || m * n < 2))
             {
                 cout << "Invalid input, try again:" << endl;
                 entry_error = true;
