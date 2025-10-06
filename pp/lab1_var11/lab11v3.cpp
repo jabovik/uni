@@ -9,7 +9,11 @@ int vectorised_index(int i, int j, int columns)
 {
     return i * columns + j;
 }
-
+/// @brief выражение для определения подстановки
+/// @param idx начальный индекс
+/// @param m строки
+/// @param n столбцы
+/// @return 
 int index_transposed(int idx, int m, int n)
 {
     return idx%m * n + idx/m;
@@ -21,25 +25,24 @@ void cycle_swap(char *mat, int p, int m, int n){
     if (next == start){
         return;
     } // цикл длины 1
-    do
+    while(start!= next)
     {
         swap(mat[p], mat[next]);
         p = next;
         next = index_transposed(p,m,n);
-    } while (start != next);
-    
+    }
 }
 bool is_idx_min_in_cycle(char *mat, int p, int m, int n)
 {
     int start = p;
     int next = index_transposed(p,m,n);
     if (next == start) return false; // цикл длины 1
-    do
+    while (start != next)
     {
         if(start > next) return false;
         p = next;
         next = index_transposed(p,m,n);
-    } while (start != next);
+    } 
     return true;
 }
 void transpose(char *mat, int m, int n)
@@ -75,11 +78,13 @@ int main(int argc, char const *argv[])
     {
         cin >> mat[i];
     }
+    cout << "original matrix:\n";
     draw(mat, m, n);
+    cout << '\n';
     transpose(mat, m, n);
-    cout << "after transposition" << endl;
+    cout << "after transposition:\n" << endl;
     draw(mat, n, m);
     delete[] mat;
-    
+
     return 0;
 }
