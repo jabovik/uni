@@ -1,6 +1,7 @@
 #include <iostream>
 #include <math.h>
 #include <iomanip>
+#include <limits>
 using namespace std;
 long double f(double x, double n)
 {
@@ -51,36 +52,37 @@ int main(int argc, char const *argv[])
         x = safe_input();
         cout << "Введите alpha: ";
         alpha = safe_input();
-        long double a_n;
+        long double a_n = f(x,0);
         long double s_n = 0;
         long double s_prev = 0;
-        long double alpha_n = 0;
+        long double a_n_next = 0;
+        long double alpha_n = numeric_limits<long double>::max();
         cout << "n" << setw(15) << "a_n" << setw(15) << "s_n" << setw(15) << "alpha_n\n";
         if (trunc(alpha) == alpha)
         {
             for (int n = 0; n < alpha; n++)
             {
-                a_n = f(x, n);
+                a_n_next = f(x,n+1);
                 s_n += a_n;
-                alpha_n = abs(s_n - s_prev);
-                s_prev = s_n;
+                alpha_n = abs(a_n_next/s_n);
                 iter_info(n, a_n, s_n, alpha_n);
+                a_n = a_n_next;
             }
         }
         else
         {
-            for (int n = 0; alpha_n < alpha; n++)
+            for (int n = 0; alpha_n >= alpha; n++)
             {
-                a_n = f(x, n);
+                a_n_next = f(x,n+1);
                 s_n += a_n;
-                alpha_n = abs(s_n - s_prev);
-                s_prev = s_n;
+                alpha_n = abs(a_n_next/s_n);
                 iter_info(n, a_n, s_n, alpha_n);
+                a_n = a_n_next;
             }
         }
     cout << "\n\nПовторить? (y/any key)\n";
     cin >> choice;
-    cin.ignore(1000, '\n');
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
     return 0;
 }
