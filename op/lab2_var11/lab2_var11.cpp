@@ -5,28 +5,13 @@
 #include <string>
 #include <cctype>
 using namespace std;
-/// @brief функция расчёта члена ряда в контексте суммы ряда. т.е можно использовать только при подсчёте с n=0
+/// @brief функция расчёта члена ряда в контексте суммы ряда.
 /// @param x
 /// @param n
 /// @return член ряда a_n
-long double f(double x, double n)
+long double f(double x, double n, long double a_n_prev)
 {
-    static long long int n_fact; // n!
-    static long double x_to_n;   // pow(x,n)
-    static long double two_pow;  // 2^(n/2)
-    if (n == 0)
-    {
-        n_fact = 1;
-        x_to_n = 1;
-        two_pow = 1;
-    }
-    else
-    {
-        n_fact *= n;
-        x_to_n *= x;
-        two_pow *= M_SQRT2;
-    }
-    return (two_pow * sin(M_PI * n / 4) * x_to_n) / n_fact;
+    return (a_n_prev*M_SQRT2*x/n)*sin(M_PI*n/4)/sin(M_PI*(n-1)/4);
 }
 
 const int WIDTH = 20;
@@ -116,17 +101,18 @@ int main(int argc, char const *argv[])
             cout << "по точности\n";
         }
 
-        long double a_n = f(x, 0);
+        long double a_n = 0;
         long double s_n = 0;
         long double a_n_next = 0;
         long double alpha_n = numeric_limits<long double>::max();
 
         cout << "n" << setw(WIDTH) << "a_n" << setw(WIDTH) << "s_n" << setw(WIDTH) << "alpha_n\n";
+        //cout << "0" << setw(WIDTH) << "0" << setw(WIDTH) << "0" << setw(WIDTH) << "-\n";
         if (alpha_is_int) // проверка alhpha - целое или нет.
         {
             for (int n = 0; n < alpha; n++) // для целого
             {
-                a_n_next = f(x, n + 1);
+                a_n_next = f(x, n, a_n);
                 s_n += a_n;
                 alpha_n = abs(a_n_next / s_n);
                 iter_info(n, a_n, s_n, alpha_n);
@@ -137,7 +123,7 @@ int main(int argc, char const *argv[])
         {
             for (int n = 0; alpha_n >= alpha; n++) // для дробного
             {
-                a_n_next = f(x, n + 1);
+                a_n_next = f(x, n, a_n);
                 s_n += a_n;
                 alpha_n = abs(a_n_next / s_n);
                 iter_info(n, a_n, s_n, alpha_n);
