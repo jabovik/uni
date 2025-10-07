@@ -3,21 +3,32 @@
 #include <iomanip>
 #include <limits>
 #include <string>
-#include <cctype>
+#include <regex>
 using namespace std;
-/// @brief функция расчёта члена ряда в контексте суммы ряда.
-/// @param x
-/// @param n
-/// @return член ряда a_n
-long double f(double x, double n, long double a_n_prev)
+//b_n+1 = b_n(sqrt(2)x/n+1)
+// 1.2e+3 + балл
+/// @brief рекуррентная формула без sin.
+/// @param x 
+/// @param n 
+/// @param b_n_prev предыдущий член
+/// @return 
+long double calc_b_n(double x, double n, long double b_n_prev)
 {
-    return (a_n_prev*M_SQRT2*x/n)*sin(M_PI*n/4)/sin(M_PI*(n-1)/4);
+    return b_n_prev*M_SQRT2*x/n;
+}
+/// @brief расчёт члена ряда из b_n умножением на синус
+/// @param n 
+/// @param b_n 
+/// @return 
+long double calc_a_n(double n, long double b_n)
+{
+    return b_n*sin(M_PI*n/4);
 }
 
 const int WIDTH = 20;
-void iter_info(int n, long double a_n, long double s_n, long double alpha_n)
+void iter_info(int n, long double b_n, long double a_n, long double s_b_n, long double s_a_n, long double alpha_n)
 {
-    cout << n << setw(WIDTH) << a_n << setw(WIDTH) << s_n << setw(WIDTH) << alpha_n << '\n';
+    cout << n << setw(WIDTH) << b_n << setw(WIDTH) << a_n << setw(WIDTH) << s_b_n << setw(WIDTH) << s_a_n << setw(WIDTH) << alpha_n << endl;
 }
 
 template <typename T>
@@ -35,23 +46,8 @@ T safe_input()
 
 bool validate_alpha_string(string alpha_str)
 {
-    int dot_count;
-    for (auto &i : alpha_str)
-    {
-        if (!isdigit(i) && i != '.')
-        {
-            return false;
-        }
-        else if (i == '.')
-        {
-            ++dot_count;
-        }
-        if(dot_count>1)
-        {
-            return false;
-        }
-    }
-    return true;
+    regex re(R"(^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$)");
+    return regex_match(alpha_str, re);
 }
 
 int main(int argc, char const *argv[])
@@ -65,7 +61,6 @@ int main(int argc, char const *argv[])
         cout << "Подсчёт частичного числового ряда вида:\n2^(n/2)*sin(pi*n/4)*x^n/n! \n";
         cout << "Введите x: ";
         x = safe_input<double>();
-
         do // цикл ввода для alpha
         {
             cout << "Введите положительное число alpha: ";
@@ -86,10 +81,10 @@ int main(int argc, char const *argv[])
 
         } while (alpha <= 0);
 
-        bool alpha_is_int = false;
-        if (alpha_str == to_string(stoi(alpha_str))) // если дробная часть не была отброшена, значит её и не было.
+        bool alpha_is_int = true;
+        if (alpha_str.find('.') != string::npos)
         {
-            alpha_is_int = true; // тогда число целое
+            alpha_is_int = false;
         }
         cout << "Выбран режим: ";
         if (alpha_is_int)
@@ -100,34 +95,36 @@ int main(int argc, char const *argv[])
         {
             cout << "по точности\n";
         }
-
+        long double b_n = 1;
         long double a_n = 0;
-        long double s_n = 0;
-        long double a_n_next = 0;
+        long double s_a_n = 0;
+        long double s_b_n = b_n;
         long double alpha_n = numeric_limits<long double>::max();
 
-        cout << "n" << setw(WIDTH) << "a_n" << setw(WIDTH) << "s_n" << setw(WIDTH) << "alpha_n\n";
-        //cout << "0" << setw(WIDTH) << "0" << setw(WIDTH) << "0" << setw(WIDTH) << "-\n";
+        cout << "n" << setw(WIDTH) << "b_n" << setw(WIDTH) << "a_n" << setw(WIDTH) << "s_b_n" << setw(WIDTH) << "s_a_n" << setw(WIDTH) << "alpha_bn\n";
+        cout << 0 << setw(WIDTH) << b_n << setw(WIDTH) << a_n << setw(WIDTH) << s_b_n << setw(WIDTH) << s_a_n << setw(WIDTH) << "-\n";
         if (alpha_is_int) // проверка alhpha - целое или нет.
         {
-            for (int n = 0; n < alpha; n++) // для целого
+            for (int n = 1; n < alpha; n++) // для целого
             {
-                a_n_next = f(x, n, a_n);
-                s_n += a_n;
-                alpha_n = abs(a_n_next / s_n);
-                iter_info(n, a_n, s_n, alpha_n);
-                a_n = a_n_next;
+                b_n = calc_b_n(x, n, b_n);
+                s_b_n+=b_n;
+                a_n = calc_a_n(n, b_n);
+                s_a_n += a_n;
+                alpha_n = abs(calc_b_n(x, n+1, b_n)/s_b_n);
+                iter_info(n, b_n, a_n, s_b_n, s_a_n, alpha_n);
             }
         }
         else
         {
-            for (int n = 0; alpha_n >= alpha; n++) // для дробного
+            for (int n = 1; alpha_n >= alpha; n++) // для дробного
             {
-                a_n_next = f(x, n, a_n);
-                s_n += a_n;
-                alpha_n = abs(a_n_next / s_n);
-                iter_info(n, a_n, s_n, alpha_n);
-                a_n = a_n_next;
+                b_n = calc_b_n(x, n, b_n);
+                s_b_n+=b_n;
+                a_n = calc_a_n(n, b_n);
+                s_a_n += a_n;
+                alpha_n = abs(calc_b_n(x, n+1, b_n)/s_b_n);
+                iter_info(n, b_n, a_n, s_b_n, s_a_n, alpha_n);
             }
         }
         cout << "\nПовторить? (y/any key)\n";
