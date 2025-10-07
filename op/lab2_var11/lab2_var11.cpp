@@ -2,16 +2,18 @@
 #include <cmath>
 #include <iomanip>
 #include <limits>
+#include <string>
+#include <cctype>
 using namespace std;
 /// @brief функция расчёта члена ряда в контексте суммы ряда. т.е можно использовать только при подсчёте с n=0
-/// @param x 
-/// @param n 
+/// @param x
+/// @param n
 /// @return член ряда a_n
 long double f(double x, double n)
 {
     static long long int n_fact; // n!
     static long double x_to_n;   // pow(x,n)
-    static long double two_pow; // 2^(n/2)
+    static long double two_pow;  // 2^(n/2)
     if (n == 0)
     {
         n_fact = 1;
@@ -26,15 +28,17 @@ long double f(double x, double n)
     }
     return (two_pow * sin(M_PI * n / 4) * x_to_n) / n_fact;
 }
+
 const int WIDTH = 20;
 void iter_info(int n, long double a_n, long double s_n, long double alpha_n)
 {
     cout << n << setw(WIDTH) << a_n << setw(WIDTH) << s_n << setw(WIDTH) << alpha_n << '\n';
 }
 
-double safe_input()
+template <typename T>
+T safe_input()
 {
-    double input;
+    T input;
     while (!(cin >> input) || (cin.peek() != '\n'))
     {
         cin.clear();                                         // сброс состояния ошибки
@@ -44,33 +48,87 @@ double safe_input()
     return input;
 }
 
+bool validate_alpha_string(string alpha_str)
+{
+    int dot_count;
+    for (auto &i : alpha_str)
+    {
+        if (!isdigit(i) && i != '.')
+        {
+            return false;
+        }
+        else if (i == '.')
+        {
+            ++dot_count;
+        }
+        if(dot_count>1)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 int main(int argc, char const *argv[])
 {
     char choice = 'y';
     while (choice == 'y')
     {
+        string alpha_str;
         double alpha;
         double x;
         cout << "Подсчёт частичного числового ряда вида:\n2^(n/2)*sin(pi*n/4)*x^n/n! \n";
         cout << "Введите x: ";
-        x = safe_input();
+        x = safe_input<double>();
+
         do // цикл ввода для alpha
         {
-        cout << "Введите положительное число alpha: ";
-        alpha = safe_input();
-        } while (alpha<0);
-        long double a_n = f(x,0);
+            cout << "Введите положительное число alpha: ";
+            alpha_str = safe_input<string>();
+            try
+            {
+                if (!validate_alpha_string(alpha_str))
+                {
+                    throw invalid_argument("invalid string");
+                }
+
+                alpha = stod(alpha_str);
+            }
+            catch (const invalid_argument &e)
+            {
+                alpha = -1;
+            }
+
+        } while (alpha <= 0);
+
+        bool alpha_is_int = false;
+        if (alpha_str == to_string(stoi(alpha_str))) // если дробная часть не была отброшена, значит её и не было.
+        {
+            alpha_is_int = true; // тогда число целое
+        }
+        cout << "Выбран режим: ";
+        if (alpha_is_int)
+        {
+            cout << "по количеству членов\n";
+        }
+        else
+        {
+            cout << "по точности\n";
+        }
+
+        long double a_n = f(x, 0);
         long double s_n = 0;
         long double a_n_next = 0;
         long double alpha_n = numeric_limits<long double>::max();
+
         cout << "n" << setw(WIDTH) << "a_n" << setw(WIDTH) << "s_n" << setw(WIDTH) << "alpha_n\n";
-        if (trunc(alpha) == alpha) // проверка alhpha - целое или нет.
+        if (alpha_is_int) // проверка alhpha - целое или нет.
         {
             for (int n = 0; n < alpha; n++) // для целого
             {
-                a_n_next = f(x,n+1);
+                a_n_next = f(x, n + 1);
                 s_n += a_n;
-                alpha_n = abs(a_n_next/s_n);
+                alpha_n = abs(a_n_next / s_n);
                 iter_info(n, a_n, s_n, alpha_n);
                 a_n = a_n_next;
             }
@@ -79,16 +137,16 @@ int main(int argc, char const *argv[])
         {
             for (int n = 0; alpha_n >= alpha; n++) // для дробного
             {
-                a_n_next = f(x,n+1);
+                a_n_next = f(x, n + 1);
                 s_n += a_n;
-                alpha_n = abs(a_n_next/s_n);
+                alpha_n = abs(a_n_next / s_n);
                 iter_info(n, a_n, s_n, alpha_n);
                 a_n = a_n_next;
             }
         }
-    cout << "\nПовторить? (y/any key)\n";
-    cin >> choice;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "\nПовторить? (y/any key)\n";
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
     return 0;
 }
