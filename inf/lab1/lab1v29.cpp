@@ -76,84 +76,99 @@ T - период = a+b
 #include <iostream>
 #include <limits>
 using namespace std;
-
+const string INVALID_INPUT = "ERROR: INVALID INPUT. TRY AGAIN\n";
 int safe_input(string prompt)
 {
     int input;
-    cout << prompt << endl;
-    while (!(cin >> input) || (cin.peek() != '\n'))
+    cout << prompt;
+    while (!(cin >> input) || (cin.peek() != '\n') || input < 1)
     {
         cin.clear();                                         // сброс состояния ошибки
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); // очистка потока ввода
-        cout << "ERROR: INVALID INPUT, TRY AG\n";
+        cout << INVALID_INPUT;
     }
     return input;
 }
 int main(int argc, char const *argv[])
 {
-    cout << "Game with matches\n";
-    int n = safe_input("Input the total number of matches: ");
-    int a = safe_input("Input the minimal number of taken matches: ");
-    int b = safe_input("Input the maximal number of taken matches: ");
-    bool is_player_turn = true;
-    cout << "a=" << a << endl;
-    bool game = n >= a;
-    cout << "a=" << a << endl;
-    while (game)
+    char choice = 'y';
+    while (choice == 'y')
     {
-        cout << "a=" << a << endl;
-        cout << "Current number of matches: " << n << endl;
-        if (is_player_turn)
+        cout << "Game with matches\n";
+        int n = safe_input("Input the total number of matches: ");
+        int a = safe_input("Input the minimal number of taken matches: ");
+        int b = safe_input("Input the maximal number of taken matches: ");
+        cout << "Do you want to go first? (y/any key)";
+        char go_first;
+        cin >> go_first;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        bool is_player_turn = false;
+        if (go_first == 'y')
+            is_player_turn = true;
+        bool game = n >= a;
+        while (game)
         {
-            bool fl = true;
-            int turn;
-            while (fl)
+            cout << "Current number of matches: " << n << endl;
+            if (is_player_turn)
             {
-                turn = safe_input("Your turn: ");
-                fl = turn < a || turn > b;
-                if (fl)
+                bool fl = true;
+                int turn;
+                while (fl)
                 {
-                    cout << "ERROR: INVALID INPUT. TRY AGAIN\n";
+                    turn = safe_input("Your turn: ");
+                    fl = turn < a || turn > b;
+                    if (fl)
+                    {
+                        cout << "INVALID INPUT: MUST BE A NUMBER FROM " << a << " TO " << b << ". TRY AGAIN\n";
+                    }
                 }
-            }
-            n -= turn;
-        }
-        else
-        {
-            int turn = b;
-            if (n >= a && n <= b)
-            {
-                turn = n;
+                if (turn > n)
+                {
+                    cout << "You entered " << turn << " matches, but only " << n << " is present. Taking " << n << " matches.\n";
+                    turn = n;
+                }
+                n -= turn;
             }
             else
             {
-
-                for (int i = n - b; i <= n - a; i++) // поиск нужного состояния
+                int turn = b;
+                if (n >= a && n <= b)
                 {
-                    if (i % (a + b) < a) // если найдено
+                    turn = n;
+                }
+                else
+                {
+
+                    for (int i = n - b; i <= n - a; i++) // поиск нужного состояния
                     {
-                        turn = n - i;
-                        break;
+                        if (i % (a + b) < a) // если найдено
+                        {
+                            turn = n - i;
+                            break;
+                        }
                     }
                 }
+                n -= turn;
+                cout << "Bot takes " << turn << " matches\n";
             }
-            n -= turn;
-            cout << "Bot takes " << turn << " matches\n";
+            is_player_turn = !is_player_turn;
+            if (n < a)
+            {
+                game = false;
+            }
         }
-        is_player_turn = !is_player_turn;
-        if (n < a)
+        cout << "Game is over. ";
+        if (is_player_turn)
         {
-            game = false;
+            cout << "You lose!\n";
         }
-    }
-    cout << "Game is over. ";
-    if (is_player_turn)
-    {
-        cout << "You lose!\n";
-    }
-    else
-    {
-        cout << "You won!\n";
+        else
+        {
+            cout << "You won!\n";
+        }
+        cout << "Do you want to play again? (y/any key)";
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
     return 0;
 }
