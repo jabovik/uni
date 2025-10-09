@@ -3,7 +3,6 @@
 #include <iomanip>
 #include <limits>
 #include <string>
-#include <regex>
 using namespace std;
 //b_n+1 = b_n(sqrt(2)x/n+1)
 // 1.2e+3 + балл
@@ -43,11 +42,66 @@ T safe_input()
     }
     return input;
 }
-
-bool validate_alpha_string(string alpha_str)
+/// @brief валидация строки с double при помощи regex
+/// @param str строка double
+/// @return соответствует ли шаблону
+bool validate_double_string(string str)
 {
-    regex re(R"(^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$)");
-    return regex_match(alpha_str, re);
+    bool match = true;
+    bool has_exp = false;
+    bool has_digits = false;
+    bool has_dot = false;
+    int i = 0;
+    if(str[i] == '+' || str[i] == '-')
+    {
+        i++;
+    }
+    for (;i < str.size(); i++)
+    {
+        if(isdigit(str[i]))
+        {
+            has_digits = true;
+        }
+        else if (str[i] == '.')
+        {
+            if(has_dot || has_exp)
+            {
+                match = false;
+                return match;
+            }
+            has_dot = true;
+        }
+        else if (str[i] == 'e' || str[i] == 'E')
+        {
+            if(has_exp || !has_digits)
+            {
+                match = false;
+                return match;
+            }
+            has_exp = true;
+            if(i+1 == str.size())
+            {
+                match = false;
+                return match;
+            }
+            if (str[i+1] == '+' || str[i+1] == '-')
+            {
+                ++i;
+                if(i+1 == str.size())
+                {
+                    match = false;
+                    return match;
+                }
+            }
+        }
+        else
+        {
+            match = false;
+            return match;
+        }
+    }
+    return match;
+    //  ^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$
 }
 
 int main(int argc, char const *argv[])
@@ -56,18 +110,37 @@ int main(int argc, char const *argv[])
     while (choice == 'y')
     {
         string alpha_str;
+        string x_str;
         double alpha;
         double x;
         cout << "Подсчёт частичного числового ряда вида:\n2^(n/2)*sin(pi*n/4)*x^n/n! \n";
-        cout << "Введите x: ";
-        x = safe_input<double>();
+        bool x_valid = true;
+        do // цикл ввода для x
+        {
+            cout << "Введите x: ";
+            x_str = safe_input<string>();
+            try
+            {
+                if (!validate_double_string(x_str))
+                {
+                    throw invalid_argument("invalid string");
+                }
+
+                x = stod(x_str);
+            }
+            catch (const invalid_argument &e)
+            {
+                x_valid = false;
+            }
+
+        } while (!x_valid);
         do // цикл ввода для alpha
         {
             cout << "Введите положительное число alpha: ";
             alpha_str = safe_input<string>();
             try
             {
-                if (!validate_alpha_string(alpha_str))
+                if (!validate_double_string(alpha_str))
                 {
                     throw invalid_argument("invalid string");
                 }
