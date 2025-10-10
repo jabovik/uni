@@ -4,24 +4,24 @@
 #include <limits>
 #include <string>
 using namespace std;
-//b_n+1 = b_n(sqrt(2)x/n+1)
-// 1.2e+3 + балл
+// b_n+1 = b_n(sqrt(2)x/n+1)
+//  1.2e+3 + балл
 /// @brief рекуррентная формула без sin.
-/// @param x 
-/// @param n 
+/// @param x
+/// @param n
 /// @param b_n_prev предыдущий член
-/// @return 
+/// @return
 long double calc_b_n(double x, double n, long double b_n_prev)
 {
-    return b_n_prev*M_SQRT2*x/n;
+    return b_n_prev * M_SQRT2 * x / n;
 }
 /// @brief расчёт члена ряда из b_n умножением на синус
-/// @param n 
-/// @param b_n 
-/// @return 
+/// @param n
+/// @param b_n
+/// @return
 long double calc_a_n(double n, long double b_n)
 {
-    return b_n*sin(M_PI*n/4);
+    return b_n * sin(M_PI * n / 4);
 }
 
 const int WIDTH = 20;
@@ -52,19 +52,19 @@ bool validate_double_string(string str)
     bool has_digits = false;
     bool has_dot = false;
     int i = 0;
-    if(str[i] == '+' || str[i] == '-')
+    if (str[i] == '+' || str[i] == '-')
     {
         i++;
     }
-    for (;i < str.size(); i++)
+    for (; i < str.size(); i++)
     {
-        if(isdigit(str[i]))
+        if (isdigit(str[i]))
         {
             has_digits = true;
         }
         else if (str[i] == '.')
         {
-            if(has_dot || has_exp)
+            if (has_dot || has_exp)
             {
                 match = false;
                 return match;
@@ -73,21 +73,21 @@ bool validate_double_string(string str)
         }
         else if (str[i] == 'e' || str[i] == 'E')
         {
-            if(has_exp || !has_digits)
+            if (has_exp || !has_digits)
             {
                 match = false;
                 return match;
             }
             has_exp = true;
-            if(i+1 == str.size())
+            if (i + 1 == str.size())
             {
                 match = false;
                 return match;
             }
-            if (str[i+1] == '+' || str[i+1] == '-')
+            if (str[i + 1] == '+' || str[i + 1] == '-')
             {
                 ++i;
-                if(i+1 == str.size())
+                if (i + 1 == str.size())
                 {
                     match = false;
                     return match;
@@ -119,38 +119,20 @@ int main(int argc, char const *argv[])
         {
             cout << "Введите x: ";
             x_str = safe_input<string>();
-            try
-            {
-                if (!validate_double_string(x_str))
-                {
-                    throw invalid_argument("invalid string");
-                }
-
+            if (validate_double_string(x_str))
                 x = stod(x_str);
-            }
-            catch (const invalid_argument &e)
-            {
+            else
                 x_valid = false;
-            }
 
         } while (!x_valid);
         do // цикл ввода для alpha
         {
             cout << "Введите положительное число alpha: ";
             alpha_str = safe_input<string>();
-            try
-            {
-                if (!validate_double_string(alpha_str))
-                {
-                    throw invalid_argument("invalid string");
-                }
-
+            if (validate_double_string(alpha_str))
                 alpha = stod(alpha_str);
-            }
-            catch (const invalid_argument &e)
-            {
+            else
                 alpha = -1;
-            }
 
         } while (alpha <= 0);
 
@@ -181,10 +163,10 @@ int main(int argc, char const *argv[])
             for (int n = 1; n < alpha; n++) // для целого
             {
                 b_n = calc_b_n(x, n, b_n);
-                s_b_n+=b_n;
+                s_b_n += b_n;
                 a_n = calc_a_n(n, b_n);
                 s_a_n += a_n;
-                alpha_n = abs(calc_b_n(x, n+1, b_n)/s_b_n);
+                alpha_n = abs(calc_b_n(x, n + 1, b_n) / s_b_n);
                 iter_info(n, b_n, a_n, s_b_n, s_a_n, alpha_n);
             }
         }
@@ -193,10 +175,10 @@ int main(int argc, char const *argv[])
             for (int n = 1; alpha_n >= alpha; n++) // для дробного
             {
                 b_n = calc_b_n(x, n, b_n);
-                s_b_n+=b_n;
+                s_b_n += b_n;
                 a_n = calc_a_n(n, b_n);
                 s_a_n += a_n;
-                alpha_n = abs(calc_b_n(x, n+1, b_n)/s_b_n);
+                alpha_n = abs(calc_b_n(x, n + 1, b_n) / s_b_n);
                 iter_info(n, b_n, a_n, s_b_n, s_a_n, alpha_n);
             }
         }
