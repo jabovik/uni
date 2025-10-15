@@ -6,6 +6,16 @@
 #include <vector>
 using namespace std;
 
+struct Data
+{
+    int n;
+    long double b_n;
+    long double a_n;
+    long double s_b_n;
+    long double s_a_n;
+    long double alpha_n;
+};
+
 /// @brief рекуррентная формула без sin.
 long double calc_b_n(double x, double n, long double b_n_prev)
 {
@@ -99,16 +109,6 @@ bool validate_double_string(string str)
     //  ^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$
 }
 
-struct Data
-{
-    int n;
-    long double b_n;
-    long double a_n;
-    long double s_b_n;
-    long double s_a_n;
-    long double alpha_n;
-};
-
 
 int main(int argc, char const *argv[])
 {
@@ -130,6 +130,7 @@ int main(int argc, char const *argv[])
         bool x_valid = true;
         do // цикл ввода для x
         {
+            x_valid = true;
             cout << "Введите x: ";
             x_str = safe_input<string>();
             if (validate_double_string(x_str))
