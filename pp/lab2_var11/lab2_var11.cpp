@@ -4,6 +4,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <map>
 using namespace std;
 
 struct Data
@@ -109,16 +110,16 @@ bool validate_double_string(string str)
     //  ^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$
 }
 
-
 int main(int argc, char const *argv[])
 {
     char choice = 'y';
-    vector<Data> data_prev;
-    double x_prev = std::numeric_limits<double>::quiet_NaN();
+    map<double, vector<Data>> history;
     while (choice == 'y')
     {
+        vector<Data> current_data;
         string alpha_str;
         string x_str;
+        bool added_hist = false;
         double alpha;
         double x;
         long double b_n = 1;
@@ -166,23 +167,24 @@ int main(int argc, char const *argv[])
         cout << "n" << setw(WIDTH) << "b_n" << setw(WIDTH) << "a_n" << setw(WIDTH) << "s_b_n" << setw(WIDTH) << "s_a_n" << setw(WIDTH) << "alpha_bn\n";
         cout << 0 << setw(WIDTH) << b_n << setw(WIDTH) << a_n << setw(WIDTH) << s_b_n << setw(WIDTH) << s_a_n << setw(WIDTH) << "-\n";
         int n = 1;
-        if (x == x_prev)
+        if (history.count(x))
         {
-            int last_n = data_prev.back().n;
+            current_data = history[x];
+            int last_n = current_data.back().n;
             if (alpha_is_int)
             {
                 while (n < alpha && n < last_n)
                 {
-                    Data data = data_prev[n];
+                    Data data = current_data[n];
                     iter_info(data);
                     ++n;
                 }
             }
             else
             {
-                while (data_prev[n].alpha_n >= alpha && n < last_n)
+                while (current_data[n].alpha_n >= alpha && n < last_n)
                 {
-                    Data data = data_prev[n];
+                    Data data = current_data[n];
                     iter_info(data);
                     ++n;
                 }
@@ -190,11 +192,15 @@ int main(int argc, char const *argv[])
         }
         else
         {
-            data_prev.clear();
-            data_prev.push_back({0, b_n, a_n, s_b_n, s_a_n, alpha_n});
+            current_data.push_back({0, b_n, a_n, s_b_n, s_a_n, alpha_n});
         }
+        
         if (alpha_is_int) // проверка alhpha - целое или нет.
         {
+            if(n < alpha)
+            {
+                added_hist = true;
+            }
             for (; n < alpha; n++) // для целого
             {
                 b_n = calc_b_n(x, n, b_n);
@@ -204,11 +210,15 @@ int main(int argc, char const *argv[])
                 alpha_n = abs(calc_b_n(x, n + 1, b_n) / s_b_n);
                 Data data = {n, b_n, a_n, s_b_n, s_a_n, alpha_n};
                 iter_info(data);
-                data_prev.push_back({n, b_n, a_n, s_b_n, s_a_n, alpha_n});
+                current_data.push_back({n, b_n, a_n, s_b_n, s_a_n, alpha_n});
             }
         }
         else
         {
+            if(alpha_n >= alpha)
+            {
+                added_hist = true;
+            }
             for (; alpha_n >= alpha; n++) // для дробного
             {
                 b_n = calc_b_n(x, n, b_n);
@@ -218,10 +228,13 @@ int main(int argc, char const *argv[])
                 alpha_n = abs(calc_b_n(x, n + 1, b_n) / s_b_n);
                 Data data = {n, b_n, a_n, s_b_n, s_a_n, alpha_n};
                 iter_info(data);
-                data_prev.push_back(data);
+                current_data.push_back(data);
             }
         }
-        x_prev = x;
+        if(added_hist)
+        {
+            history[x] = current_data;
+        }
         cout << "\nПовторить? (y/any key)\n";
         cin >> choice;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
