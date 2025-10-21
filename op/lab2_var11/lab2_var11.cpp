@@ -154,10 +154,10 @@ int main(int argc, char const *argv[])
         long double a_n = 0;
         long double s_a_n = 0;
         long double s_b_n = b_n;
-        long double alpha_n = numeric_limits<long double>::max();
+        long double alpha_n = abs(calc_b_n(x, 1, b_n) / s_b_n);
 
         cout << "n" << setw(WIDTH) << "b_n" << setw(WIDTH) << "a_n" << setw(WIDTH) << "s_b_n" << setw(WIDTH) << "s_a_n" << setw(WIDTH) << "alpha_bn\n";
-        cout << 0 << setw(WIDTH) << b_n << setw(WIDTH) << a_n << setw(WIDTH) << s_b_n << setw(WIDTH) << s_a_n << setw(WIDTH) << "-\n";
+        iter_info(0, b_n, a_n, s_b_n, s_a_n, alpha_n);
         if (alpha_is_int) // проверка alhpha - целое или нет.
         {
             for (int n = 1; n < alpha; n++) // для целого

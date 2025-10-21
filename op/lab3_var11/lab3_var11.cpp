@@ -40,8 +40,7 @@ T safe_input(const string prompt, const string error_message, function<bool(T)> 
 {
     T input;
     cout << prompt;
-    bool flag = true;
-    while (flag)
+    while (true)
     {
         if (!(cin >> input) || (cin.peek() != '\n') || (validator && !validator(input)))
         {
@@ -52,11 +51,8 @@ T safe_input(const string prompt, const string error_message, function<bool(T)> 
         }
         else
         {
-            flag = false;
+            return input;
         }
-    }
-    {
-        return input;
     }
 }
 

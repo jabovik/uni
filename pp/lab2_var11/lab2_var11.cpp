@@ -126,7 +126,7 @@ int main(int argc, char const *argv[])
         long double a_n = 0;
         long double s_a_n = 0;
         long double s_b_n = b_n;
-        long double alpha_n = numeric_limits<long double>::max();
+        long double alpha_n = abs(calc_b_n(x, 1, b_n) / s_b_n);
         cout << "Подсчёт частичного числового ряда вида:\n2^(n/2)*sin(pi*n/4)*x^n/n! \n";
         bool x_valid = true;
         do // цикл ввода для x
@@ -165,7 +165,7 @@ int main(int argc, char const *argv[])
             cout << "по точности\n";
         }
         cout << "n" << setw(WIDTH) << "b_n" << setw(WIDTH) << "a_n" << setw(WIDTH) << "s_b_n" << setw(WIDTH) << "s_a_n" << setw(WIDTH) << "alpha_bn\n";
-        cout << 0 << setw(WIDTH) << b_n << setw(WIDTH) << a_n << setw(WIDTH) << s_b_n << setw(WIDTH) << s_a_n << setw(WIDTH) << "-\n";
+        cout << 0 << setw(WIDTH) << b_n << setw(WIDTH) << a_n << setw(WIDTH) << s_b_n << setw(WIDTH) << s_a_n << setw(WIDTH) << alpha_n;
         int n = 1;
         if (history.count(x))
         {
