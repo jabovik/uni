@@ -10,15 +10,16 @@ using namespace std;
 /// @param vec vector to sort
 void bubble_sort(int *vec, size_t size)
 {
-    for (size_t i = 0; i < size - 1; i++)
+    bool swapped = true;
+    for (size_t i = 0; (i < size - 1) && swapped; i++)
     {
-        // bool swapped = false;
         for (size_t j = 0; j < size - i - 1; j++)
         {
+            swapped =false;
             if (vec[j] > vec[j + 1])
             {
                 swap(vec[j], vec[j + 1]);
-                // swapped =true;
+                swapped =true;
             }
         }
         /*if(!swapped)
@@ -55,9 +56,8 @@ T safe_input(const string prompt, const string error_message, function<bool(T)> 
     }
 }
 
-int* generate_random_vector(size_t size)
+int* generate_random_vector(size_t size, int UPPER_RAND)
 {
-    const int UPPER_RAND = 100;
     int* vec = new int[size];
     for (size_t i = 0; i < size; i++)
     {
@@ -84,7 +84,7 @@ int main(int argc, char const *argv[])
         cout << "Bubble sort\n";
         int size = safe_input<int>("Input vector size:", "Invalid input", [](int s)
                                          { return s >= 1; });
-        int* vec = generate_random_vector(size);
+        int* vec = generate_random_vector(size, 100);
         cout << "Generated vector:\n";
         print_vector(vec, size);
         bubble_sort(vec, size);

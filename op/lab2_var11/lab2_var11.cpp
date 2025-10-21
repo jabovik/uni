@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <limits>
 #include <string>
+#include <functional>
 using namespace std;
 // b_n+1 = b_n(sqrt(2)x/n+1)
 //  1.2e+3 + балл
@@ -31,16 +32,24 @@ void iter_info(int n, long double b_n, long double a_n, long double s_b_n, long 
 }
 
 template <typename T>
-T safe_input()
+T safe_input(const string prompt, const string error_message, function<bool(T)> validator = nullptr)
 {
     T input;
-    while (!(cin >> input) || (cin.peek() != '\n'))
+    cout << prompt;
+    while (true)
     {
-        cin.clear();                                         // сброс состояния ошибки
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // очистка потока ввода
-        cout << "Неверный ввод. Повторите попытку: ";
+        if (!(cin >> input) || (cin.peek() != '\n') || (validator && !validator(input)))
+        {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << error_message << endl;
+            cout << prompt;
+        }
+        else
+        {
+            return input;
+        }
     }
-    return input;
 }
 /// @brief валидация строки с double при помощи regex
 /// @param str строка double
@@ -114,28 +123,16 @@ int main(int argc, char const *argv[])
         double alpha;
         double x;
         cout << "Подсчёт частичного числового ряда вида:\n2^(n/2)*sin(pi*n/4)*x^n/n! \n";
-        bool x_valid = true;
-        do // цикл ввода для x
-        {
-            cout << "Введите x: ";
-            x_str = safe_input<string>();
-            if (validate_double_string(x_str))
-                x = stod(x_str);
-            else
-                x_valid = false;
-
-        } while (!x_valid);
-        do // цикл ввода для alpha
-        {
-            cout << "Введите положительное число alpha: ";
-            alpha_str = safe_input<string>();
-            if (validate_double_string(alpha_str))
-                alpha = stod(alpha_str);
-            else
-                alpha = -1;
-
-        } while (alpha <= 0);
-
+        x_str = safe_input<string>("Введите x:", "Неверный ввод", validate_double_string);
+        x = stod(x_str);
+        alpha_str = safe_input<string>("Введите alpha:", "Неверный ввод(alpha должна быть>0)", [](string s)
+                                       {
+            if(validate_double_string(s) && stod(s)>0)
+            {
+                return true;
+            }
+            return false; });
+        alpha = stod(alpha_str);
         bool alpha_is_int = true;
         if (alpha_str.find('.') != string::npos)
         {
