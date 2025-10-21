@@ -8,13 +8,12 @@ using namespace std;
 
 /// @brief Bubble sort (changes vector)
 /// @param vec vector to sort
-void bubble_sort(vector<int> &vec)
+void bubble_sort(int *vec, size_t size)
 {
-    size_t n = vec.size();
-    for (size_t i = 0; i < n - 1; i++)
+    for (size_t i = 0; i < size - 1; i++)
     {
         // bool swapped = false;
-        for (size_t j = 0; j < n - i - 1; j++)
+        for (size_t j = 0; j < size - i - 1; j++)
         {
             if (vec[j] > vec[j + 1])
             {
@@ -56,10 +55,10 @@ T safe_input(const string prompt, const string error_message, function<bool(T)> 
     }
 }
 
-vector<int> generate_random_vector(size_t size)
+int* generate_random_vector(size_t size)
 {
     const int UPPER_RAND = 100;
-    vector<int> vec(size);
+    int* vec = new int[size];
     for (size_t i = 0; i < size; i++)
     {
         vec[i] = rand() % UPPER_RAND;
@@ -67,19 +66,12 @@ vector<int> generate_random_vector(size_t size)
     return vec;
 }
 
-void print_vector(const vector<int> &vec)
+void print_vector(const int* vec, size_t size)
 {
     const size_t REASANOBLE_SIZE = 100;
-    size_t i = 0;
-    for (const auto &val : vec)
+    for (size_t i = 0; i<size && i< REASANOBLE_SIZE;i++)
     {
-        cout << val << " ";
-        ++i;
-        if (i >= REASANOBLE_SIZE)
-        {
-            cout << endl;
-            return;
-        }
+        cout << vec[i] << " ";
     }
     cout << endl;
 }
@@ -92,12 +84,13 @@ int main(int argc, char const *argv[])
         cout << "Bubble sort\n";
         int size = safe_input<int>("Input vector size:", "Invalid input", [](int s)
                                          { return s >= 1; });
-        vector<int> vec = generate_random_vector(size);
+        int* vec = generate_random_vector(size);
         cout << "Generated vector:\n";
-        print_vector(vec);
-        bubble_sort(vec);
+        print_vector(vec, size);
+        bubble_sort(vec, size);
         cout << "Sorted vector:\n";
-        print_vector(vec);
+        print_vector(vec, size);
+        delete vec;
         char choice = safe_input<char>("Do you want to continue? (y/n):", "(y/n)", [](char c)
                                        { return string("YyNn").find(c) != string::npos; });
         run = choice == 'Y' || choice == 'y';
