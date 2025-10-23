@@ -124,29 +124,16 @@ int main(int argc, char const *argv[])
         double x;
         cout << "Подсчёт частичного числового ряда вида:\n2^(n/2)*sin(pi*n/4)*x^n/n! \n";
         x_str = safe_input<string>("Введите x:", "Неверный ввод", validate_double_string);
+        
         x = stod(x_str);
         alpha_str = safe_input<string>("Введите alpha:", "Неверный ввод(alpha должна быть>0)", [](string s)
-                                       {
-            if(validate_double_string(s) && stod(s)>0)
-            {
-                return true;
-            }
-            return false; });
+                                       {return validate_double_string(s) && stod(s)>0; });
         alpha = stod(alpha_str);
-        bool alpha_is_int = true;
-        if (alpha_str.find('.') != string::npos)
-        {
-            alpha_is_int = false;
-        }
+        bool alpha_is_int = alpha_str.find('.') == string::npos;    
         cout << "Выбран режим: ";
-        if (alpha_is_int)
-        {
-            cout << "по количеству членов\n";
-        }
-        else
-        {
-            cout << "по точности\n";
-        }
+        if (alpha_is_int) cout << "по количеству членов\n";
+        else cout << "по точности\n";
+
         long double b_n = 1;
         long double a_n = 0;
         long double s_a_n = 0;
