@@ -17,88 +17,85 @@ V_вещества/(V_вещества + V_воды)
 
 #include <iostream>
 #include <limits>
+#include <functional>
 using namespace std;
 
-const string INVALID_INPUT = "ERROR: INVALID INPUT. TRY AGAIN\n";
+/// @brief шаблонная функция безопасного ввода
+/// @tparam T
+/// @param prompt пояснение пользователю
+/// @param error_message
+/// @param validator функция проверки корректности ввода
+/// @return обработанный и безопасный ввод
 template <typename T>
-T safe_input(string prompt)
+T safe_input(const string &prompt, const string &error_message, function<bool(T)> validator = nullptr)
 {
     T input;
     cout << prompt;
-    while (!(cin >> input) || (cin.peek() != '\n'))
+    while (true)
     {
-        cin.clear();                                         // сброс состояния ошибки
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // очистка потока ввода
-        cout << INVALID_INPUT;
+        if (!(cin >> input) || (cin.peek() != '\n') || (validator && !validator(input)))
+        {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << error_message << endl;
+            cout << prompt;
+        }
+        else
+        {
+            return input;
+        }
     }
-    return input;
 }
 int main(int argc, char const *argv[])
 {
-    char choice = 'y';
-    while (choice == 'y')
+    const string INVALID_INPUT = "INVALID INPUT, TRY AGAIN\n";
+    bool run = true;
+    while (run)
     {
         double init_conc, init_volume, target_conc;
-        do
-        {
-            init_volume = safe_input<double>("Введите начальный объём: ");
-            if (init_volume < 0)
-            {
-                cout << INVALID_INPUT;
-            }
-        } while (init_volume < 0);
-
-        do
-        {
-            init_conc = safe_input<double>("Введите начальную концентрацию: ");
-            if (init_conc > 1 || init_conc < 0)
-            {
-                cout << INVALID_INPUT;
-            }
-        } while (init_conc >= 1 || init_conc < 0);
-
-        do
-        {
-            target_conc = safe_input<double>("Введите целевую концентрацию: ");
-            if (target_conc >= 1 || target_conc < 0)
-            {
-                cout << INVALID_INPUT;
-            }
-        } while (target_conc > 1 || target_conc < 0);
-
+        init_volume = safe_input<double>("Enter initial volume: ", INVALID_INPUT, [](double d)
+                                         { return d > 0; });
+        init_conc = safe_input<double>("Enter initial concentration: ", INVALID_INPUT, [](double d)
+                                       { return d <= 1 && d >= 0; });
+        target_conc = safe_input<double>("Enter target concentration: ", INVALID_INPUT, [](double d)
+                                         { return d <= 1 && d >= 0; });
         double init_sub_volume = init_volume * init_conc;
         double added_volume;
-        bool added_sub;
+        bool is_sub_added;
         if (init_conc < target_conc)
         {
             // добавим вещества
-            added_sub = true;
+            is_sub_added = true;
             added_volume = (target_conc * init_volume - init_sub_volume) / (1 - target_conc);
         }
         else if (init_conc > target_conc)
         {
             // добавим воды
-            added_sub = false;
+            is_sub_added = false;
             added_volume = init_sub_volume / target_conc - init_volume;
         }
+        
+        if (init_conc == target_conc)
+        {
+            cout << "Do nothing\n";
+        }
+        else if (target_conc == 0 && init_conc != 0)
+        {
+            cout << "Water volume to add tends to infinity\n";
+        }
+        else if (target_conc == 1 && init_conc != 1)
+        {
+            cout << "Substance volume to add tends to infinity\n";
+        }
         else
         {
-            cout << "init_conc = target_conc";
+            cout << "Add " << added_volume;
+            is_sub_added ? cout << " of substance\n" : cout << " of water\n";
         }
-        if (init_conc != target_conc)
-        {
-            cout << "Добавьте " << added_volume;
-            added_sub ? cout << " вещества\n" : cout << " воды\n";
-        }
-        else
-        {
-            cout << "Ничего добавлять не нужно\n";
-        }
-        cout << "Повторить программу? ";
-        do
-        {
-            choice = safe_input<char>("(y/n)\n");
-        } while (choice != 'y' && choice != 'n');
+        cout << "Repeat? ";
+        char choice = safe_input<char>("(y/n):", "(y/n)", [](char c)
+                                       { return string("YyNn").find(c) != string::npos; });
+        run = choice == 'Y' || choice == 'y';
     }
     return 0;
 }
