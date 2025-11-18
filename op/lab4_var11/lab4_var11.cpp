@@ -2,6 +2,7 @@
 #include <limits>
 #include <cctype>
 #include <fstream>
+#include <cstring>
 using namespace std;
 
 int find_word_w_len(char *str, int size, int length)
@@ -28,12 +29,11 @@ int find_word_w_len(char *str, int size, int length)
     return -1;
 }
 
-int delete_word_w_len(char *&str, int size, int length)
+char* delete_word_w_len(char *str, int size, int idx, int length)
 {
-    int idx = find_word_w_len(str, size, length);
-    if (idx == -1)
+    if(idx<0)
     {
-        return idx;
+        throw invalid_argument("idx<0");
     }
     char *cut_str = new char[size - length];
     for (size_t i = 0; i < idx; i++)
@@ -42,26 +42,36 @@ int delete_word_w_len(char *&str, int size, int length)
     }
     for (size_t i = idx + length; i < size; i++)
     {
-        cut_str[i - length] = str[i+1];
+        cut_str[i - length] = str[i];
     }
-    str = cut_str;
-    delete[] cut_str;
-    return idx;
+    return cut_str;
 }
 
 int main(int argc, char const *argv[])
 {
+    const size_t MAX_LENGTH = 1'000'000;
     ifstream input("fin");
     ofstream output("fout");
     int size, length;
-    input >> size >> length;
-    char *str = new char[size];
-    input.get(); // to consume the newline character after length input
-    input.getline(str, size + 1);
-    delete_word_w_len(str, size, length);
-    for (size_t i = 0; i < size; i++)
+    input >> length;
+    input.get();
+    char *str = new char[MAX_LENGTH];
+    while (input.getline(str, MAX_LENGTH))
     {
-        output << str[i];
+        size = strlen(str);
+        char *cut_str = new char[size-length];
+        int idx = find_word_w_len(str, size, length);
+        if (idx >= 0)
+        {
+            cut_str = delete_word_w_len(str, size, idx, length);
+            size = size - (length);
+        }
+        for (size_t i = 0; i < size; i++)
+        {
+            output << cut_str[i];
+        }
+        output << '\n';
+        delete[] cut_str;
     }
     delete[] str;
     return 0;

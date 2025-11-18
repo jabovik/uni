@@ -45,7 +45,6 @@ T safe_input(const string &prompt, const string &error_message, function<bool(T)
         }
     }
 }
-
 class Env
 {
 private:
@@ -78,7 +77,7 @@ public:
     }
     void agent_move_prev()
     {
-        idx = (idx + -1) % wagons.size();
+        idx = (idx + wagons.size() - 1) % wagons.size();
     }
 };
 
@@ -104,6 +103,7 @@ public:
     Agent(Env &env) : env(env)
     {
     }
+    virtual void run() = 0;
 };
 class AutoAgent : public Agent
 {
@@ -114,13 +114,38 @@ private:
         SEARCHING,
         RETURNING,
     };
-
+    void print_info()
+    {
+        Agent::print_info();
+        cout << "Input an action (next/previous/switch/answer)>";
+    }
+    void move_next()
+    {
+        cout << "next\n";
+        Agent::move_next();
+    }
+    void change_wagon_state()
+    {
+        cout << "switch\n";
+        Agent::change_wagon_state();
+    }
+    void move_prev()
+    {
+        cout << "previous\n";
+        Agent::move_prev();
+    }
+    bool check_answer(int answer)
+    {
+        cout << "answer\n";
+        cout << answer << '\n';
+        return Agent::check_answer(answer);
+    }
 public:
     using Agent::Agent;
-    void run()
+    void run() override
     {
         AgentStatus agent_status = INIT;
-        bool first_state;
+        bool first_state = get_wagon_state();
         int counter = 0;
         int temp;
         bool is_answer_correct = false;
@@ -128,12 +153,10 @@ public:
         while (!is_answer_correct)
         {
             print_info();
-            cout << "Input an action (next/previous/switch/answer)>";
             switch (agent_status)
             {
             case INIT:
                 first_state = get_wagon_state();
-                cout << "next\n";
                 move_next();
                 ++counter;
                 agent_status = SEARCHING;
@@ -141,14 +164,12 @@ public:
             case SEARCHING:
                 if (get_wagon_state() == first_state)
                 {
-                    cout << "switch\n";
                     change_wagon_state();
                     temp = counter;
                     agent_status = RETURNING;
                 }
                 else
                 {
-                    cout << "next\n";
                     move_next();
                     ++counter;
                 }
@@ -156,7 +177,6 @@ public:
             case RETURNING:
                 if (counter)
                 {
-                    cout << "previous\n";
                     move_prev();
                     --counter;
                 }
@@ -164,9 +184,6 @@ public:
                 {
                     if (get_wagon_state() != first_state)
                     {
-                        cout << "answer\n";
-                        cout << "Input an answer>";
-                        cout << temp << '\n';
                         is_answer_correct = check_answer(temp);
                         if (!is_answer_correct)
                         {
@@ -185,7 +202,6 @@ public:
                     }
                 }
                 break;
-
             default:
                 break;
             }
@@ -197,7 +213,7 @@ class ManualAgent : public Agent
 {
 public:
     using Agent::Agent;
-    void run()
+    void run() override
     {
         cout << "Manual Mode \n";
         bool is_answer_correct = false;
@@ -238,13 +254,49 @@ public:
 
 int main(int argc, char const *argv[])
 {
-    cout << "Ring of wagons";
+    cout << "Ring of wagons\n";
 
-    vector<bool> wagons{false, true, false, true};
-    int start_idx = 0;
+    vector<bool> wagons;
+    int start_idx;
+
+    char custom = safe_input<char>("Do you want to set custom wagons? (y/n)>", "invalid input", [](char c)
+                                   { return c == 'y' || c == 'n'; });
+    if (custom == 'y')
+    {
+        int n = safe_input<int>("Input number of wagons>", "invalid input", [](int i)
+                                { return i > 0; });
+        for (int i = 0; i < n; ++i)
+        {
+            string prompt = "Input state of wagon " + to_string(i) + " (o/f)>";
+            char state = safe_input<char>(prompt, "invalid input", [](char c)
+                                          { return c == 'o' || c == 'f'; });
+            if (state == 'o')
+                wagons.push_back(true);
+            else
+                wagons.push_back(false);
+        }
+        start_idx = safe_input<int>("Input starting wagon index>", "invalid input", [n](int i)
+                                    { return i >= 0 && i < n; });
+    }
+    else
+    {
+        wagons = {false, true, false, false, true, true, false};
+        start_idx = 0; // temporary
+        cout << "Using default wagons\n";
+    }
+    char mode = safe_input<char>("Manual or auto mode? (m/a)>", "invalid input", [](char c)
+                                 { return c == 'm' || c == 'a'; });
     Env env(start_idx, wagons);
-    // ManualAgent agent(env);
-    AutoAgent agent(env);
-    agent.run();
+    Agent *agent;
+    if (mode == 'a')
+    {
+        agent = new AutoAgent(env);
+    }
+    else if (mode == 'm')
+    {
+        agent = new ManualAgent(env);
+    }
+    agent->run();
+    delete agent;
     return 0;
 }

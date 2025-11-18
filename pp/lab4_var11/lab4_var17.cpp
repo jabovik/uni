@@ -49,7 +49,6 @@ int main(int argc, char const *argv[])
     string str;
     size_t length;
     getline(input, str);
-    input >> length;
     vector<size_t> indices = find_words_w_less_len(str, length);
     replace_letters(str,indices, '*');
     output << str;
