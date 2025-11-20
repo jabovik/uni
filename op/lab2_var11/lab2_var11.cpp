@@ -129,7 +129,8 @@ int main(int argc, char const *argv[])
         alpha_str = safe_input<string>("Введите alpha:", "Неверный ввод(alpha должна быть>0)", [](string s)
                                        {return validate_double_string(s) && stod(s)>0; });
         alpha = stod(alpha_str);
-        bool alpha_is_int = alpha_str.find('.') == string::npos;    
+        bool alpha_is_int = alpha_str.find('.') == string::npos;
+        if (alpha<1) alpha_is_int = false;
         cout << "Выбран режим: ";
         if (alpha_is_int) cout << "по количеству членов\n";
         else cout << "по точности\n";
