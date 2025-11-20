@@ -55,8 +55,52 @@ public:
         }
         return is;
     }
+    friend class Subscriber;
 };
 
+class Subscriber
+{
+    string name;
+    double tariff;
+    ConversationData cd;
+    public:
+    double process() // поминутный
+    {
+        double total_minutes = 0;
+        for (auto duration : cd.process())
+        {
+            total_minutes += duration;
+        }
+        return total_minutes * tariff;
+    }
+    double process_seconds() // посекундный
+    {
+        double total_seconds = 0;
+        for (auto duration : cd.durations)
+        {
+            total_seconds += duration;
+        }
+        return total_seconds * tariff;
+    }
+    friend ostream &operator<<(ostream &os, const Subscriber &sub)
+    {
+        os << "Subscriber: " << sub.name << "\nTariff: " << sub.tariff << " money units\n";
+        os << "calls:\n";
+        os << sub.cd;
+        return os;
+    }
+    friend istream &operator>>(istream &is, Subscriber &sub)
+    {
+        getline(is >> ws, sub.name);
+        if (!(is >> sub.tariff) || sub.tariff < 0)
+        {
+            is.setstate(ios::failbit);
+            return is;
+        }
+        is >> sub.cd;
+        return is;
+    }
+};
 /// @brief шаблонная функция безопасного ввода
 /// @tparam T
 /// @param prompt пояснение пользователю
@@ -87,12 +131,12 @@ T safe_input(const string &prompt, const string &error_message, function<bool(T)
 
 void execute()
 {
-    cout << "Conversation Data\n";
-    vector<ConversationData> cd_vec;
-    vector<vector<int>> cd_processed_vec;
+    cout << "Subscribers\n";
+    vector<Subscriber> sub_vec;
+    vector<double> sub_processed_vec;
     int amount = 0;
     char choice = safe_input<char>("Console or file input? (c/f):", "(c/f)", [](char c)
-                                   { return string("CcFf").find(c) != string::npos; });
+                            { return string("CcFf").find(c) != string::npos; });
     if (choice == 'C' || choice == 'c')
     {
         cout << "Console input mode\n";
@@ -100,12 +144,12 @@ void execute()
                                  { return i > 0; });
         for (size_t i = 0; i < amount; i++)
         {
-            ConversationData cd;
+            Subscriber sub;
             bool run = true;
-            cout << "Enter conversation data [" << i << "] (size followed by durations in seconds):\n";
+            cout << "Enter subscriber data [" << i << "] name, tariff, conversation data(size followed by durations in seconds):\n";
             while (run)
             {
-                cin >> cd;
+                cin >> sub;
                 if (cin.fail())
                 {
                     cin.clear();
@@ -116,8 +160,8 @@ void execute()
                     run = false;
                 }
             }
-            cd_vec.push_back(cd);
-            cd_processed_vec.push_back(cd.process());
+            sub_vec.push_back(sub);
+            sub_processed_vec.push_back(sub.process());
         }
     }
     else
@@ -138,16 +182,16 @@ void execute()
             }
             for (size_t i = 0; i < amount; i++)
             {
-                ConversationData cd;
-                input >> cd;
+                Subscriber sub;
+                input >> sub;
                 if (input.fail())
                 {
                     cerr << "File input error\n";
                     input.close();
                     return;
                 }
-                cd_vec.push_back(cd);
-                cd_processed_vec.push_back(cd.process());
+                sub_vec.push_back(sub);
+                sub_processed_vec.push_back(sub.process());
             }
             input.close();
         }
@@ -171,15 +215,10 @@ void execute()
         }
         out_stream = &output;
     }
-    for (size_t i = 0; i < cd_vec.size(); i++)
+    for (size_t i = 0; i < sub_vec.size(); i++)
     {
-        *out_stream << "vec element [" << i << "]\n";
-        *out_stream << cd_vec[i];
-        *out_stream << "Processed durations (in minutes):\n";
-        for (size_t j = 0; j < cd_processed_vec[i].size(); j++)
-        {
-            *out_stream << '[' << j << "]= " << cd_processed_vec[i][j] << " minutes\n";
-        }
+        *out_stream << "vec element [" << i << "]\n" << sub_vec[i];
+        *out_stream << "Evaluation: " << sub_processed_vec[i] << " money units\n\n";
     }
 }
 int main(int argc, char const *argv[])
