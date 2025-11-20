@@ -3,6 +3,8 @@
 #include <vector>
 #include <fstream>
 #include <limits>
+#include <string>
+#include <sstream>
 #include <iomanip>
 using namespace std;
 class ConversationData
