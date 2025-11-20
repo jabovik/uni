@@ -10,7 +10,7 @@ int find_word_w_len(char *str, int size, int length)
     int count = 0;
     for (size_t i = 0; i < size; i++)
     {
-        if (!isspace(str[i]) && !ispunct(str[i]))
+        if (isalpha(str[i]))
             ++count;
         else
         {
@@ -29,9 +29,9 @@ int find_word_w_len(char *str, int size, int length)
     return -1;
 }
 
-char* delete_word_w_len(char *str, int size, int idx, int length)
+char *delete_word_w_len(char *str, int size, int idx, int length)
 {
-    if(idx<0)
+    if (idx < 0)
     {
         throw invalid_argument("idx<0");
     }
@@ -49,29 +49,36 @@ char* delete_word_w_len(char *str, int size, int idx, int length)
 
 int main(int argc, char const *argv[])
 {
-    const size_t MAX_LENGTH = 1'000'000;
+    const size_t MAX_SIZE = 1'000'000;
     ifstream input("fin");
     ofstream output("fout");
     int size, length;
     input >> length;
     input.get();
-    char *str = new char[MAX_LENGTH];
-    while (input.getline(str, MAX_LENGTH))
+    char *str = new char[MAX_SIZE];
+    while (input.getline(str, MAX_SIZE))
     {
         size = strlen(str);
-        char *cut_str = new char[size-length];
         int idx = find_word_w_len(str, size, length);
         if (idx >= 0)
         {
+            char *cut_str = new char[size - length];
             cut_str = delete_word_w_len(str, size, idx, length);
             size = size - (length);
+            for (size_t i = 0; i < size; i++)
+            {
+                output << cut_str[i];
+            }
+            delete[] cut_str;
         }
-        for (size_t i = 0; i < size; i++)
+        else
         {
-            output << cut_str[i];
+            for (size_t i = 0; i < size; i++)
+            {
+                output << str[i];
+            }
         }
         output << '\n';
-        delete[] cut_str;
     }
     delete[] str;
     return 0;
