@@ -20,39 +20,20 @@
 Иначе повторяем
 */
 #include <iostream>
-#include <vector>
-#include <functional>
-#include <limits>
+#include <../../includes/safe_input.cpp>
+#include <cstdlib>
+#include <ctime>
+#include "../../includes/MyVector.cpp"
 using namespace std;
 
-template <typename T>
-T safe_input(const string &prompt, const string &error_message, function<bool(T)> validator = nullptr)
-{
-    T input;
-    cout << prompt;
-    while (true)
-    {
-        if (!(cin >> input) || (cin.peek() != '\n') || (validator && !validator(input)))
-        {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << error_message << endl;
-            cout << prompt;
-        }
-        else
-        {
-            return input;
-        }
-    }
-}
 class Env
 {
 private:
     int idx;
-    vector<bool> wagons;
+    MyVector<bool> wagons;
 
 public:
-    Env(int idx, vector<bool> wagons) : idx(idx), wagons(wagons)
+    Env(int idx, MyVector<bool> wagons) : idx(idx), wagons(wagons)
     {
     }
     bool get_wagon_state()
@@ -140,6 +121,7 @@ private:
         cout << answer << '\n';
         return Agent::check_answer(answer);
     }
+
 public:
     using Agent::Agent;
     void run() override
@@ -252,23 +234,32 @@ public:
     }
 };
 
+MyVector<bool> generate_wagons(size_t n)
+{
+    MyVector<bool> wagons;
+    for (size_t i = 0; i < n; ++i)
+    {
+        wagons.push_back(rand() % 2);
+    }
+    return wagons;
+}
+
 int main(int argc, char const *argv[])
 {
     cout << "Ring of wagons\n";
-
-    vector<bool> wagons;
+    srand(time(0));
+    MyVector<bool> wagons;
     int start_idx;
 
-    char custom = safe_input<char>("Do you want to set custom wagons? (y/n)>", "invalid input", [](char c)
-                                   { return c == 'y' || c == 'n'; });
-    if (custom == 'y')
+    char custom = safe_input<char>("Do you want to set custom/default/random wagons? (c/d/r)>", "invalid input", [](char c)
+                                   { return c == 'c' || c == 'd' || c == 'r'; });
+    if (custom == 'c')
     {
         int n = safe_input<int>("Input number of wagons>", "invalid input", [](int i)
                                 { return i > 0; });
         for (int i = 0; i < n; ++i)
         {
-            string prompt = "Input state of wagon " + to_string(i) + " (o/f)>";
-            char state = safe_input<char>(prompt, "invalid input", [](char c)
+            char state = safe_input<char>("Input state of wagon " + to_string(i) + " (o/f)>", "invalid input", [](char c)
                                           { return c == 'o' || c == 'f'; });
             if (state == 'o')
                 wagons.push_back(true);
@@ -278,12 +269,24 @@ int main(int argc, char const *argv[])
         start_idx = safe_input<int>("Input starting wagon index>", "invalid input", [n](int i)
                                     { return i >= 0 && i < n; });
     }
-    else
+    else if(custom == 'd')
     {
         wagons = {false, true, false, false, true, true, false};
         start_idx = 0; // temporary
         cout << "Using default wagons\n";
     }
+    else if (custom == 'r')
+    {
+        int a = safe_input<int>("Input lower bound of wagons>", "invalid input", [](int i)
+                                { return i > 0; });
+        int b = safe_input<int>("Input upper bound of wagons>", "invalid input", [a](int i)
+                                { return i >= a; });
+        int n = a + rand() % (b - a + 1);
+        wagons = generate_wagons(n);
+        start_idx = rand() % n;
+        cout << "Using random wagons\n";
+    }
+     cout << "Wagons states:\n";
     char mode = safe_input<char>("Manual or auto mode? (m/a)>", "invalid input", [](char c)
                                  { return c == 'm' || c == 'a'; });
     Env env(start_idx, wagons);
