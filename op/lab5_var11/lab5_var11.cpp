@@ -22,43 +22,43 @@ public:
         }
         return result;
     }
-    friend ostream &operator<<(ostream &os, const ConversationData &cd)
+    friend ostream &operator<<(ostream &os, const ConversationData &cd);
+    friend istream &operator>>(istream &is, ConversationData &cd);
+};
+ostream &operator<<(ostream &os, const ConversationData &cd)
+{
+    for (size_t i = 0; i < cd.size; i++)
     {
-
-        for (size_t i = 0; i < cd.size; i++)
-        {
-            os << '[' << i << "]= " << cd.durations[i] << " seconds\n";
-        }
-        return os;
+        os << '[' << i << "]= " << cd.durations[i] << " seconds\n";
     }
-    friend istream &operator>>(istream &is, ConversationData &cd)
+    return os;
+}
+istream &operator>>(istream &is, ConversationData &cd)
+{
+    string input;
+    getline(is >> ws, input);
+    istringstream iss(input);
+    cd.durations.clear();
+    if (!(iss >> cd.size) || cd.size < 0)
     {
-        string input;
-        getline(is >> ws, input);
-        istringstream iss(input);
-        cd.durations.clear();
-        if (!(iss >> cd.size) || cd.size < 0)
+        is.setstate(ios::failbit);
+        return is;
+    }
+    cd.durations.resize(cd.size);
+    for (size_t i = 0; i < cd.size; i++)
+    {
+        if (!(iss >> cd.durations[i]) || cd.durations[i] < 0)
         {
             is.setstate(ios::failbit);
             return is;
         }
-        cd.durations.resize(cd.size);
-        for (size_t i = 0; i < cd.size; i++)
-        {
-            if (!(iss >> cd.durations[i]) || cd.durations[i] < 0)
-            {
-                is.setstate(ios::failbit);
-                return is;
-            }
-        }
-        if (iss >> ws && !iss.eof())
-        {
-            is.setstate(ios::failbit);
-        }
-        return is;
     }
-};
-
+    if (iss >> ws && !iss.eof())
+    {
+        is.setstate(ios::failbit);
+    }
+    return is;
+}
 /// @brief шаблонная функция безопасного ввода
 /// @tparam T
 /// @param prompt пояснение пользователю
