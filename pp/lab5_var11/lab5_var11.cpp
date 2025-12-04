@@ -10,15 +10,15 @@ using namespace std;
 class ConversationData
 {
     int size = 0;
-    vector<int> durations;
+    int* durations = nullptr;
 
 public:
     vector<int> process()
     {
         vector<int> result;
-        for (auto d : durations)
+        for (size_t i = 0; i < size; i++)
         {
-            result.push_back(d / 60);
+            result.push_back(durations[i]);
         }
         return result;
     }
@@ -33,16 +33,20 @@ public:
     }
     friend istream &operator>>(istream &is, ConversationData &cd)
     {
-        string input;
-        getline(is >> ws, input);
+        char input[256];
+        is >> ws;
+        is.getline(input, 256);
         istringstream iss(input);
-        cd.durations.clear();
         if (!(iss >> cd.size) || cd.size < 0)
         {
             is.setstate(ios::failbit);
             return is;
         }
-        cd.durations.resize(cd.size);
+        if(cd.durations != nullptr)
+        {
+            delete[] cd.durations;
+        }
+        cd.durations = new int[cd.size];
         for (size_t i = 0; i < cd.size; i++)
         {
             if (!(iss >> cd.durations[i]) || cd.durations[i] < 0)
@@ -62,7 +66,7 @@ public:
 
 class Subscriber
 {
-    string name;
+    char name[256];
     double tariff;
     ConversationData cd;
     public:
@@ -78,9 +82,9 @@ class Subscriber
     double process_seconds() // посекундный
     {
         double total_seconds = 0;
-        for (auto duration : cd.durations)
+        for (auto i = 0; i < cd.size; i++)
         {
-            total_seconds += duration;
+            total_seconds += cd.durations[i];
         }
         return total_seconds * tariff;
     }
@@ -93,7 +97,8 @@ class Subscriber
     }
     friend istream &operator>>(istream &is, Subscriber &sub)
     {
-        getline(is >> ws, sub.name);
+        is >> ws;
+        is.getline(sub.name, 256);
         if (!(is >> sub.tariff) || sub.tariff < 0)
         {
             is.setstate(ios::failbit);
