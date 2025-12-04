@@ -23,7 +23,7 @@ public:
     MyVector() : _size(0), _reserved(1), _data(new T[_reserved])
     {
     }
-    MyVector(std::initializer_list<T> init_list) : MyVector()
+    MyVector(std::initializer_list<T> init_list) : MyVector() // uniform инициализация
     {
         for (const auto &i : init_list)
         {

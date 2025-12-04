@@ -20,10 +20,10 @@
 Иначе повторяем
 */
 #include <iostream>
-#include <../../includes/safe_input.cpp>
+#include "safe_input.cpp"
 #include <cstdlib>
 #include <ctime>
-#include "../../includes/MyVector.cpp"
+#include "MyVector.cpp"
 using namespace std;
 
 class Env
