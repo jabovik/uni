@@ -9,25 +9,25 @@
 using namespace std;
 class ConversationData
 {
-    int size = 0;
-    vector<int> durations;
+    int _size = 0;
+    int* _durations = nullptr;
 
 public:
     vector<int> process()
     {
         vector<int> result;
-        for (auto d : durations)
+        for (int i = 0; i<_size; i++)
         {
-            result.push_back(d / 60);
+            result.push_back(_durations[i] / 60);
         }
         return result;
     }
     friend ostream &operator<<(ostream &os, const ConversationData &cd)
     {
 
-        for (size_t i = 0; i < cd.size; i++)
+        for (size_t i = 0; i < cd._size; i++)
         {
-            os << '[' << i << "]= " << cd.durations[i] << " seconds\n";
+            os << '[' << i << "]= " << cd._durations[i] << " seconds\n";
         }
         return os;
     }
@@ -36,16 +36,19 @@ public:
         string input;
         getline(is >> ws, input);
         istringstream iss(input);
-        cd.durations.clear();
-        if (!(iss >> cd.size) || cd.size < 0)
+        if (!(iss >> cd._size) || cd._size < 0)
         {
             is.setstate(ios::failbit);
             return is;
         }
-        cd.durations.resize(cd.size);
-        for (size_t i = 0; i < cd.size; i++)
+        if(cd._durations != nullptr || cd._size)
         {
-            if (!(iss >> cd.durations[i]) || cd.durations[i] < 0)
+            delete[] cd._durations;
+        }
+        cd._durations = new int[cd._size];
+        for (size_t i = 0; i < cd._size; i++)
+        {
+            if (!(iss >> cd._durations[i]) || cd._durations[i] < 0)
             {
                 is.setstate(ios::failbit);
                 return is;
@@ -56,6 +59,13 @@ public:
             is.setstate(ios::failbit);
         }
         return is;
+    }
+    ~ConversationData()
+    {
+        if (_durations != nullptr)
+        {
+            delete[] _durations;
+        }
     }
     friend class Subscriber;
 };
@@ -78,9 +88,9 @@ class Subscriber
     double process_seconds() // посекундный
     {
         double total_seconds = 0;
-        for (auto duration : cd.durations)
+        for (int i = 0; i < cd._size; i++)
         {
-            total_seconds += duration;
+            total_seconds += cd._durations[i];
         }
         return total_seconds * tariff;
     }
@@ -201,7 +211,7 @@ void execute()
     choice = safe_input<char>("Console or file output? (c/f):", "(c/f)", [](char c)
                               { return string("CcFf").find(c) != string::npos; });
     ostream *out_stream;
-    ofstream output("fout");
+    ofstream output;
     if (choice == 'C' || choice == 'c')
     {
         cout << "Console output mode\n";
@@ -209,6 +219,7 @@ void execute()
     }
     else
     {
+        output.open("fout");
         cout << "File output mode\n";
         if (!output)
         {
