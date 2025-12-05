@@ -9,14 +9,48 @@
 using namespace std;
 class ConversationData
 {
-    int _size = 0;
-    int* _durations = nullptr;
+    int _size;
+    int *_durations;
 
 public:
+    ConversationData() : _size(0), _durations(nullptr) {};
+    ConversationData(int size, int *durations) : _size(size)
+    {
+        _durations = new int[_size];
+        for (int i = 0; i < _size; i++)
+        {
+            _durations[i] = durations[i];
+        }
+    }
+    ConversationData(const ConversationData &other) : _size(other._size)
+    {
+        _durations = new int[_size];
+        for (int i = 0; i < _size; i++)
+        {
+            _durations[i] = other._durations[i];
+        }
+    }
+    ConversationData &operator=(const ConversationData &other)
+    {
+        if (this != &other)
+        {
+            if (_durations != nullptr)
+            {
+                delete[] _durations;
+            }
+            _size = other._size;
+            _durations = new int[_size];
+            for (int i = 0; i < _size; i++)
+            {
+                _durations[i] = other._durations[i];
+            }
+        }
+        return *this;
+    }
     vector<int> process()
     {
         vector<int> result;
-        for (int i = 0; i<_size; i++)
+        for (int i = 0; i < _size; i++)
         {
             result.push_back(_durations[i] / 60);
         }
@@ -41,7 +75,7 @@ public:
             is.setstate(ios::failbit);
             return is;
         }
-        if(cd._durations != nullptr || cd._size)
+        if (cd._durations != nullptr) // можно оптимизировать
         {
             delete[] cd._durations;
         }
@@ -60,6 +94,14 @@ public:
         }
         return is;
     }
+    int size() const
+    {
+        return _size;
+    }
+    const int *durations() const
+    {
+        return _durations;
+    }
     ~ConversationData()
     {
         if (_durations != nullptr)
@@ -67,7 +109,6 @@ public:
             delete[] _durations;
         }
     }
-    friend class Subscriber;
 };
 
 class Subscriber
@@ -75,7 +116,21 @@ class Subscriber
     string name;
     double tariff;
     ConversationData cd;
-    public:
+
+public:
+    Subscriber() = default;
+    Subscriber(const string &name, double tariff, const ConversationData &cd) : name(name), tariff(tariff), cd(cd) {}
+    Subscriber(const Subscriber &other) : name(other.name), tariff(other.tariff), cd(other.cd) {}
+    Subscriber &operator=(const Subscriber &other)
+    {
+        if (this != &other)
+        {
+            name = other.name;
+            tariff = other.tariff;
+            cd = other.cd;
+        }
+        return *this;
+    }
     double process() // поминутный
     {
         double total_minutes = 0;
@@ -88,9 +143,9 @@ class Subscriber
     double process_seconds() // посекундный
     {
         double total_seconds = 0;
-        for (int i = 0; i < cd._size; i++)
+        for (int i = 0; i < cd.size(); i++)
         {
-            total_seconds += cd._durations[i];
+            total_seconds += cd.durations()[i];
         }
         return total_seconds * tariff;
     }
@@ -112,6 +167,18 @@ class Subscriber
         is >> sub.cd;
         return is;
     }
+    string get_name() const
+    {
+        return name;
+    }
+    double get_tariff() const
+    {
+        return tariff;
+    }
+    const ConversationData &get_conversation_data() const
+    {
+        return cd;
+    }
 };
 /// @brief шаблонная функция безопасного ввода
 /// @tparam T
@@ -124,21 +191,15 @@ T safe_input(const string &prompt, const string &error_message, function<bool(T)
 {
     T input;
     cout << prompt;
-    while (true)
+    while (!(cin >> input) || (cin.peek() != '\n') || (validator && !validator(input)))
     {
-        if (!(cin >> input) || (cin.peek() != '\n') || (validator && !validator(input)))
-        {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << error_message << endl;
-            cout << prompt;
-        }
-        else
-        {
-            cin.get(); // newline removal
-            return input;
-        }
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << error_message << endl;
+        cout << prompt;
     }
+    cin.get(); // newline removal
+    return input;
 }
 
 void execute()
@@ -148,7 +209,7 @@ void execute()
     vector<double> sub_processed_vec;
     int amount = 0;
     char choice = safe_input<char>("Console or file input? (c/f):", "(c/f)", [](char c)
-                            { return string("CcFf").find(c) != string::npos; });
+                                   { return string("CcFf").find(c) != string::npos; });
     if (choice == 'C' || choice == 'c')
     {
         cout << "Console input mode\n";
@@ -178,6 +239,7 @@ void execute()
     }
     else
     {
+        // const Subscriber corrupt_subscriber("CORRUPT_SUBSCRIBER", 0.0, ConversationData(1, new int[1]{0}));
         cout << "File input mode\n";
         ifstream input("fin");
         if (!input)
@@ -186,24 +248,20 @@ void execute()
         }
         else
         {
-            if (!(input >> amount) || amount < 0)
-            {
-                cerr << "Error reading amount from file\n";
-                input.close();
-                return;
-            }
-            for (size_t i = 0; i < amount; i++)
+            while (input >> ws && !input.eof())
             {
                 Subscriber sub;
                 input >> sub;
                 if (input.fail())
                 {
-                    cerr << "File input error\n";
-                    input.close();
-                    return;
+                    cerr << "FILE INPUT ERROR. CORRUPTED ENTRY DISCARDED\n";
+                    input.clear();
                 }
-                sub_vec.push_back(sub);
-                sub_processed_vec.push_back(sub.process());
+                else
+                {
+                    sub_vec.push_back(sub);
+                    sub_processed_vec.push_back(sub.process());
+                }
             }
             input.close();
         }
@@ -230,7 +288,8 @@ void execute()
     }
     for (size_t i = 0; i < sub_vec.size(); i++)
     {
-        *out_stream << "vec element [" << i << "]\n" << sub_vec[i];
+        *out_stream << "vec element [" << i << "]\n"
+                    << sub_vec[i];
         *out_stream << "Evaluation: " << sub_processed_vec[i] << " money units\n\n";
     }
 }
