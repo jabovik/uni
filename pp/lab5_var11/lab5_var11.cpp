@@ -104,6 +104,25 @@ public:
     {
         return _durations;
     }
+    void add_conversation(int conv)
+    {
+        if(conv<0)
+        {
+            throw invalid_argument("Conversation length must not be negative");
+        }
+            int* new_durations = new int[_size];
+            for (int i = 0; i < _size-1; i++)
+            {
+                new_durations[i] = _durations[i];
+            }
+            new_durations[_size] = conv;
+        if(_durations != nullptr)
+        {
+            delete[] _durations;
+        }
+        ++_size;
+        _durations = new_durations;
+    }
     ~ConversationData()
     {
         if (_durations != nullptr)
@@ -223,8 +242,8 @@ T safe_input(const string &prompt, const string &error_message, function<bool(T)
 void execute()
 {
     cout << "Subscribers\n";
-    vector<Subscriber> sub_vec;
-    vector<double> sub_processed_vec;
+    vector<Subscriber> sub_vec; // вектор для объектов класса
+    vector<double> sub_processed_vec; // вектор результатов обработки
     int amount = 0;
     char choice = safe_input<char>("Console or file input? (c/f):", "(c/f)", [](char c)
                                    { return string("CcFf").find(c) != string::npos; });
