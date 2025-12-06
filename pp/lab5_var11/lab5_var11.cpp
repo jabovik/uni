@@ -158,7 +158,7 @@ public:
         {
             throw invalid_argument("Conversation length must not be negative");
         }
-        int *new_durations = new int[_size];
+        int *new_durations = new int[_size+1];
         for (int i = 0; i < _size - 1; i++)
         {
             new_durations[i] = _durations[i];
