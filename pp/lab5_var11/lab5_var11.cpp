@@ -60,15 +60,6 @@ public:
     }
     friend ostream &operator<<(ostream &os, const ConversationData &cd)
     {
-
-        for (size_t i = 0; i < cd._size; i++)
-        {
-            os << '[' << i << "]= " << cd._durations[i] << " seconds\n";
-        }
-        return os;
-    }
-    friend ofstream &operator<<(ofstream &os, const ConversationData &cd)
-    {
         os << cd._size << ' ';
         for (size_t i = 0; i < cd._size; i++)
         {
@@ -162,16 +153,9 @@ public:
     }
     friend ostream &operator<<(ostream &os, const Subscriber &sub)
     {
-        os << "Subscriber: " << sub.name << "\nTariff: " << sub.tariff << " money units\n";
-        os << "calls:\n";
-        os << sub.cd;
-        return os;
-    }
-    friend ofstream &operator<<(ofstream &os, const Subscriber &sub)
-    {
         os << sub.name << '\n'
            << sub.tariff << '\n';
-        os << sub.cd << '\n';
+        os << sub.cd;
         return os;
     }
     friend istream &operator>>(istream &is, Subscriber &sub)
@@ -234,37 +218,6 @@ T safe_input(const string &prompt, const string &error_message, function<bool(T)
     }
     cin.get(); // newline removal
     return input;
-}
-
-bool file_output(string path, vector<Subscriber> &sub_vec, vector<double> sub_processed_vec)
-{
-    ofstream fout(path);
-    if (!fout)
-    {
-        cerr << "Fail opening file\n";
-        return false;
-    }
-    for (auto element : sub_vec)
-    {
-        fout << element << "\n";
-    }
-    for (auto element : sub_processed_vec)
-    {
-        fout << "Evaluation: " << element << " money units\n";
-    }
-    return true;
-}
-bool console_output(const vector<Subscriber> &sub_vec, const vector<double> sub_processed_vec)
-{
-    for (auto element : sub_vec)
-    {
-        cout << element << "\n";
-    }
-    for (auto element : sub_processed_vec)
-    {
-        cout << "Evaluation: " << element << " money units\n";
-    }
-    return true;
 }
 
 void execute()
@@ -338,11 +291,12 @@ void execute()
     choice = safe_input<char>("Console or file output? (c/f):", "(c/f)", [](char c)
                               { return string("CcFf").find(c) != string::npos; });
     // ostream *out_stream;
-    ofstream output;
+    ostream* output;
+    ofstream fout;
     if (choice == 'C' || choice == 'c')
     {
         cout << "Console output mode\n";
-        console_output(sub_vec, sub_processed_vec);
+        output = &cout;
     }
     else
     {
@@ -352,9 +306,16 @@ void execute()
         while (path_input_cycle)
         {
             cout << "Input path: ";
-            getline(cin, path);
-            path_input_cycle = !file_output(path, sub_vec, sub_processed_vec);
+            getline(cin >> ws, path);
+            fout.open(path);
+            path_input_cycle = !fout;
+            output = &fout;
         }
+    }
+    for (size_t i = 0; i < sub_vec.size(); i++)
+    {
+        *output << "vec element [" << i << "]\n" << sub_vec[i] << '\n';
+        *output << "Evaluation: " << sub_processed_vec[i] << " money units\n\n";
     }
 }
 int main(int argc, char const *argv[])  
