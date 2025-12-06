@@ -7,6 +7,8 @@
 #include <sstream>
 #include <iomanip>
 using namespace std;
+
+/// @brief класс содержащий данные о разговорах: количество и длительность в секундах
 class ConversationData
 {
     int _size;
@@ -22,7 +24,7 @@ public:
             _durations[i] = durations[i];
         }
     }
-    ConversationData(const ConversationData &other) : _size(other._size)
+    ConversationData(const ConversationData &other) : _size(other._size) // копирующий конструктор
     {
         _durations = new int[_size];
         for (int i = 0; i < _size; i++)
@@ -77,7 +79,7 @@ public:
     friend istream &operator>>(istream &is, ConversationData &cd)
     {
         string input;
-        getline(is >> ws, input);
+        getline(is >> ws, input); // ws - манипулятор, пропускающий 'пустые' символы: пробелы и перенос строки.
         istringstream iss(input);
         if (!(iss >> cd._size) || cd._size < 0)
         {
@@ -119,7 +121,7 @@ public:
         }
     }
 };
-
+/// @brief класс, содержащий информацию об абоненте: имя, тариф, данные о разговорах
 class Subscriber
 {
     string name;
@@ -129,7 +131,7 @@ class Subscriber
 public:
     Subscriber() = default;
     Subscriber(const string &name, double tariff, const ConversationData &cd) : name(name), tariff(tariff), cd(cd) {}
-    Subscriber(const Subscriber &other) : name(other.name), tariff(other.tariff), cd(other.cd) {}
+    Subscriber(const Subscriber &other) : name(other.name), tariff(other.tariff), cd(other.cd) {} // копирующий конструктор
     Subscriber &operator=(const Subscriber &other)
     {
         if (this != &other)
@@ -206,6 +208,10 @@ public:
             throw invalid_argument("Tariff cannot be negative");
         }
         tariff = new_tariff;
+    }
+    void set_conv_data(const ConversationData &new_cd)
+    {
+        cd = new_cd;
     }
 };
 /// @brief шаблонная функция безопасного ввода
@@ -351,7 +357,7 @@ void execute()
         }
     }
 }
-int main(int argc, char const *argv[])
+int main(int argc, char const *argv[])  
 {
     bool run = true;
     while (run)
