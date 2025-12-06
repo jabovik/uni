@@ -65,6 +65,15 @@ public:
         }
         return os;
     }
+    friend ofstream &operator<<(ofstream &os, const ConversationData &cd)
+    {
+        os << cd._size << ' ';
+        for (size_t i = 0; i < cd._size; i++)
+        {
+            os << cd._durations[i] << ' ';
+        }
+        return os;
+    }
     friend istream &operator>>(istream &is, ConversationData &cd)
     {
         string input;
@@ -156,6 +165,13 @@ public:
         os << sub.cd;
         return os;
     }
+    friend ofstream &operator<<(ofstream &os, const Subscriber &sub)
+    {
+        os << sub.name << '\n'
+           << sub.tariff << '\n';
+        os << sub.cd << '\n';
+        return os;
+    }
     friend istream &operator>>(istream &is, Subscriber &sub)
     {
         getline(is >> ws, sub.name);
@@ -179,6 +195,18 @@ public:
     {
         return cd;
     }
+    void set_name(const string &new_name)
+    {
+        name = new_name;
+    }
+    void set_tariff(double new_tariff)
+    {
+        if (new_tariff < 0)
+        {
+            throw invalid_argument("Tariff cannot be negative");
+        }
+        tariff = new_tariff;
+    }
 };
 /// @brief шаблонная функция безопасного ввода
 /// @tparam T
@@ -200,6 +228,37 @@ T safe_input(const string &prompt, const string &error_message, function<bool(T)
     }
     cin.get(); // newline removal
     return input;
+}
+
+bool file_output(string path, vector<Subscriber> &sub_vec, vector<double> sub_processed_vec)
+{
+    ofstream fout(path);
+    if (!fout)
+    {
+        cerr << "Fail opening file\n";
+        return false;
+    }
+    for (auto element : sub_vec)
+    {
+        fout << element << "\n";
+    }
+    for (auto element : sub_processed_vec)
+    {
+        fout << "Evaluation: " << element << " money units\n";
+    }
+    return true;
+}
+bool console_output(const vector<Subscriber> &sub_vec, const vector<double> sub_processed_vec)
+{
+    for (auto element : sub_vec)
+    {
+        cout << element << "\n";
+    }
+    for (auto element : sub_processed_vec)
+    {
+        cout << "Evaluation: " << element << " money units\n";
+    }
+    return true;
 }
 
 void execute()
@@ -241,56 +300,55 @@ void execute()
     {
         // const Subscriber corrupt_subscriber("CORRUPT_SUBSCRIBER", 0.0, ConversationData(1, new int[1]{0}));
         cout << "File input mode\n";
-        ifstream input("fin");
-        if (!input)
+        bool path_input_cycle = true;
+        string path;
+        ifstream input;
+        while (path_input_cycle)
         {
-            cerr << "Error opening fin\n";
+            cout << "Input path: ";
+            getline(cin, path);
+            input.open(path);
+            path_input_cycle = !input;
+            if (path_input_cycle)
+                cerr << "Error opening file\n";
         }
-        else
+        while (input >> ws && !input.eof())
         {
-            while (input >> ws && !input.eof())
+            Subscriber sub;
+            input >> sub;
+            if (input.fail())
             {
-                Subscriber sub;
-                input >> sub;
-                if (input.fail())
-                {
-                    cerr << "FILE INPUT ERROR. CORRUPTED ENTRY DISCARDED\n";
-                    input.clear();
-                }
-                else
-                {
-                    sub_vec.push_back(sub);
-                    sub_processed_vec.push_back(sub.process());
-                }
+                cerr << "FILE INPUT ERROR. CORRUPTED ENTRY DISCARDED\n";
+                input.clear();
             }
-            input.close();
+            else
+            {
+                sub_vec.push_back(sub);
+                sub_processed_vec.push_back(sub.process());
+            }
         }
+        input.close();
     }
     choice = safe_input<char>("Console or file output? (c/f):", "(c/f)", [](char c)
                               { return string("CcFf").find(c) != string::npos; });
-    ostream *out_stream;
+    // ostream *out_stream;
     ofstream output;
     if (choice == 'C' || choice == 'c')
     {
         cout << "Console output mode\n";
-        out_stream = &cout;
+        console_output(sub_vec, sub_processed_vec);
     }
     else
     {
-        output.open("fout");
         cout << "File output mode\n";
-        if (!output)
+        bool path_input_cycle = true;
+        string path;
+        while (path_input_cycle)
         {
-            cerr << "Error opening fout\n";
-            return;
+            cout << "Input path: ";
+            getline(cin, path);
+            path_input_cycle = !file_output(path, sub_vec, sub_processed_vec);
         }
-        out_stream = &output;
-    }
-    for (size_t i = 0; i < sub_vec.size(); i++)
-    {
-        *out_stream << "vec element [" << i << "]\n"
-                    << sub_vec[i];
-        *out_stream << "Evaluation: " << sub_processed_vec[i] << " money units\n\n";
     }
 }
 int main(int argc, char const *argv[])
