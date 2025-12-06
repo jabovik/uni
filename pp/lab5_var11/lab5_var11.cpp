@@ -58,6 +58,15 @@ public:
         }
         return result;
     }
+    friend ofstream &operator<<(ofstream &os, const ConversationData &cd)
+    {
+        os << cd._size << ' ';
+        for (size_t i = 0; i < cd._size; i++)
+        {
+            os << cd._durations[i] << ' ';
+        }
+        return os;
+    }
     friend ostream &operator<<(ostream &os, const ConversationData &cd)
     {
         os << cd._size << ' ';
@@ -68,6 +77,45 @@ public:
         return os;
     }
     friend istream &operator>>(istream &is, ConversationData &cd)
+    {
+        bool run = true;
+        while (run)
+        {
+            run = false;
+            string input;
+            getline(is >> ws, input); // ws - манипулятор, пропускающий 'пустые' символы: пробелы и перенос строки.
+            istringstream iss(input);
+            if (!(iss >> cd._size) || cd._size < 0)
+            {
+                cerr << "Input error: invalid size\n";
+                run = true;
+            }
+            else
+            {
+                if (cd._durations != nullptr) // можно оптимизировать
+                {
+                    delete[] cd._durations;
+                }
+                cd._durations = new int[cd._size];
+                for (size_t i = 0; i < cd._size; i++)
+                {
+                    if ((!(iss >> cd._durations[i]) || cd._durations[i] < 0))
+                    {
+                        cerr << "Input error: invalid duration\n";
+                        run = true;
+                        i = cd._size;
+                    }
+                }
+                if (iss >> ws && !iss.eof() && run == false)
+                {
+                    cerr << "Input error: too much data for duration\n";
+                    run = true;
+                }
+            }
+        }
+        return is;
+    }
+    friend ifstream &operator>>(ifstream &is, ConversationData &cd)
     {
         string input;
         getline(is >> ws, input); // ws - манипулятор, пропускающий 'пустые' символы: пробелы и перенос строки.
@@ -106,17 +154,17 @@ public:
     }
     void add_conversation(int conv)
     {
-        if(conv<0)
+        if (conv < 0)
         {
             throw invalid_argument("Conversation length must not be negative");
         }
-            int* new_durations = new int[_size];
-            for (int i = 0; i < _size-1; i++)
-            {
-                new_durations[i] = _durations[i];
-            }
-            new_durations[_size] = conv;
-        if(_durations != nullptr)
+        int *new_durations = new int[_size];
+        for (int i = 0; i < _size - 1; i++)
+        {
+            new_durations[i] = _durations[i];
+        }
+        new_durations[_size] = conv;
+        if (_durations != nullptr)
         {
             delete[] _durations;
         }
@@ -131,6 +179,7 @@ public:
         }
     }
 };
+
 /// @brief класс, содержащий информацию об абоненте: имя, тариф, данные о разговорах
 class Subscriber
 {
@@ -177,13 +226,30 @@ public:
         os << sub.cd;
         return os;
     }
-    friend istream &operator>>(istream &is, Subscriber &sub)
+    friend ifstream &operator>>(ifstream &is, Subscriber &sub)
     {
         getline(is >> ws, sub.name);
         if (!(is >> sub.tariff) || sub.tariff < 0)
         {
             is.setstate(ios::failbit);
             return is;
+        }
+        is >> sub.cd;
+        return is;
+    }
+    friend istream &operator>>(istream &is, Subscriber &sub)
+    {
+        getline(is >> ws, sub.name);
+        bool run = true;
+        while (run)
+        {
+            run = false;
+            if (!(is >> sub.tariff) || sub.tariff < 0 || is.peek()!= '\n')
+            {
+                cerr << "Input error: invalid tariff\n";
+                is.ignore(numeric_limits<streamsize>::max(), '\n');
+                run = true;
+            }
         }
         is >> sub.cd;
         return is;
@@ -242,7 +308,7 @@ T safe_input(const string &prompt, const string &error_message, function<bool(T)
 void execute()
 {
     cout << "Subscribers\n";
-    vector<Subscriber> sub_vec; // вектор для объектов класса
+    vector<Subscriber> sub_vec;       // вектор для объектов класса
     vector<double> sub_processed_vec; // вектор результатов обработки
     int amount = 0;
     char choice = safe_input<char>("Console or file input? (c/f):", "(c/f)", [](char c)
@@ -310,7 +376,7 @@ void execute()
     choice = safe_input<char>("Console or file output? (c/f):", "(c/f)", [](char c)
                               { return string("CcFf").find(c) != string::npos; });
     // ostream *out_stream;
-    ostream* output;
+    ostream *output;
     ofstream fout;
     if (choice == 'C' || choice == 'c')
     {
@@ -333,11 +399,12 @@ void execute()
     }
     for (size_t i = 0; i < sub_vec.size(); i++)
     {
-        *output << "vec element [" << i << "]\n" << sub_vec[i] << '\n';
+        *output << "vec element [" << i << "]\n"
+                << sub_vec[i] << '\n';
         *output << "Evaluation: " << sub_processed_vec[i] << " money units\n\n";
     }
 }
-int main(int argc, char const *argv[])  
+int main(int argc, char const *argv[])
 {
     bool run = true;
     while (run)
