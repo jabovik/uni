@@ -8,6 +8,29 @@
 #include <iomanip>
 using namespace std;
 
+
+/// @brief шаблонная функция безопасного ввода
+/// @tparam T
+/// @param prompt пояснение пользователю
+/// @param error_message
+/// @param validator функция проверки корректности ввода
+/// @return обработанный и безопасный ввод
+template <typename T>
+T safe_stream_input(const string &prompt, const string &error_message, istream &is, function<bool(T)> validator = nullptr)
+{
+    T input;
+    cout << prompt;
+    while (!(is >> input) || (is.peek() != '\n') || (validator && !validator(input)))
+    {
+        is.clear();
+        is.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << error_message << endl;
+        cout << prompt;
+    }
+    is.get(); // newline removal
+    return input;
+}
+
 /// @brief класс содержащий данные о разговорах: количество и длительность в секундах
 class ConversationData
 {
@@ -76,6 +99,7 @@ public:
         }
         return os;
     }
+    /*
     friend istream &operator>>(istream &is, ConversationData &cd)
     {
         bool run = true;
@@ -112,6 +136,23 @@ public:
                     run = true;
                 }
             }
+        }
+        return is;
+    }
+        */
+    friend istream &operator>>(istream &is, ConversationData &cd)
+    {
+        cd._size = safe_stream_input<int>("Input size:", "Invalid size", is, [](int s)
+                                          { return s >= 0; });
+        if (cd._durations != nullptr) // можно оптимизировать
+        {
+            delete[] cd._durations;
+        }
+        cd._durations = new int[cd._size];
+        for (size_t i = 0; i < cd._size; i++)
+        {
+            cd._durations[i] = safe_stream_input<int>("Input duration[" + to_string(i) + "]: ", "Invalid duration", is, [](int dur)
+                                                      { return dur > 0; });
         }
         return is;
     }
@@ -158,7 +199,7 @@ public:
         {
             throw invalid_argument("Conversation length must not be negative");
         }
-        int *new_durations = new int[_size+1];
+        int *new_durations = new int[_size + 1];
         for (int i = 0; i < _size - 1; i++)
         {
             new_durations[i] = _durations[i];
@@ -240,17 +281,7 @@ public:
     friend istream &operator>>(istream &is, Subscriber &sub)
     {
         getline(is >> ws, sub.name);
-        bool run = true;
-        while (run)
-        {
-            run = false;
-            if (!(is >> sub.tariff) || sub.tariff < 0 || is.peek()!= '\n')
-            {
-                cerr << "Input error: invalid tariff\n";
-                is.ignore(numeric_limits<streamsize>::max(), '\n');
-                run = true;
-            }
-        }
+        sub.tariff = safe_stream_input<double>("Input tariff:", "Invalid tariff", is, [](double tar){return tar>=0;});
         is >> sub.cd;
         return is;
     }
