@@ -1,6 +1,7 @@
 *pract
 build/
-
+fin*
+fout*
 # Python
 __pycache__/
 *.pyc

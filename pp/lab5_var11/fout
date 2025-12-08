@@ -1,34 +1,20 @@
-vec element [0]
-Subscriber: Sherlock Holmes
-Tariff: 100 money units
-calls:
-[0]= 30 seconds
-[1]= 43 seconds
-[2]= 60 seconds
-[3]= 120 seconds
+Sherlock Holmes
+100
+4 30 43 60 120 
+
+James Bond
+150
+3 120 1200 12000 
+
+Alice
+20
+1 600 
+
+Gandalf
+20
+2 30 59 
+
 Evaluation: 300 money units
-
-vec element [1]
-Subscriber: James Bond
-Tariff: 150 money units
-calls:
-[0]= 7 seconds
-[1]= 1200 seconds
-[2]= 12000 seconds
-Evaluation: 33000 money units
-
-vec element [2]
-Subscriber: Alice
-Tariff: 20 money units
-calls:
-[0]= 600 seconds
+Evaluation: 33300 money units
 Evaluation: 200 money units
-
-vec element [3]
-Subscriber: Gandalf
-Tariff: 20 money units
-calls:
-[0]= 30 seconds
-[1]= 59 seconds
 Evaluation: 0 money units
-
