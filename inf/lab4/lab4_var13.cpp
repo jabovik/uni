@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cctype>
-#include "../../includes/safe_input.cpp"
+#include <safe_input.cpp>
 using namespace std;
 
 class TextStatistics
