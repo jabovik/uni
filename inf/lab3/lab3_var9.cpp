@@ -237,6 +237,7 @@ public:
 MyVector<bool> generate_wagons(size_t n)
 {
     MyVector<bool> wagons;
+    wagons.reserve(n);
     for (size_t i = 0; i < n; ++i)
     {
         wagons.push_back(rand() % 2);
@@ -257,6 +258,7 @@ int main(int argc, char const *argv[])
     {
         int n = safe_input<int>("Input number of wagons>", "invalid input", [](int i)
                                 { return i > 0; });
+        wagons.reserve(n);
         for (int i = 0; i < n; ++i)
         {
             char state = safe_input<char>("Input state of wagon " + to_string(i) + " (o/f)>", "invalid input", [](char c)
@@ -286,7 +288,6 @@ int main(int argc, char const *argv[])
         start_idx = rand() % n;
         cout << "Using random wagons\n";
     }
-     cout << "Wagons states:\n";
     char mode = safe_input<char>("Manual or auto mode? (m/a)>", "invalid input", [](char c)
                                  { return c == 'm' || c == 'a'; });
     Env env(start_idx, wagons);
