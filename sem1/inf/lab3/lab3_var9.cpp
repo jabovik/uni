@@ -245,10 +245,9 @@ MyVector<bool> generate_wagons(size_t n)
     return wagons;
 }
 
-int main(int argc, char const *argv[])
+void execute()
 {
     cout << "Ring of wagons\n";
-    srand(time(0));
     MyVector<bool> wagons;
     int start_idx;
 
@@ -302,5 +301,21 @@ int main(int argc, char const *argv[])
     }
     agent->run();
     delete agent;
+}
+
+int main(int argc, char const *argv[])
+{
+    srand(time(0));
+    bool run = true;
+    while (run)
+    {
+        execute();
+        char choice = safe_input<char>("Run again? (y/n):", "(y/n)", [](char c)
+                                       { return string("YyNn").find(c) != string::npos; });
+        if (choice == 'N' || choice == 'n')
+        {
+            run = false;
+        }
+    }
     return 0;
 }
