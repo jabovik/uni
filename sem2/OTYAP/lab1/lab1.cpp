@@ -2,9 +2,6 @@
 #include <iostream>
 #include <vector>
 
-const int MAX_TEXT_LENGTH = 1000;
-const int MAX_WORD_LENGTH = 100;
-
 bool is_palindrome(const char *str, int len)
 {
     for (int i = 0; i < len / 2; ++i)
@@ -17,16 +14,9 @@ bool is_palindrome(const char *str, int len)
     return true;
 }
 /// @brief checks if char is cyrillic in windows-1251
-/// @param c char
-/// @return true if cyrillic
 bool is_cyrillic(unsigned char c)
 {
-    return (c >= 192 && c <= 255);
-}
-
-bool is_numeric(char c)
-{
-    return (c >= '0' && c <= '9');
+    return ((c >= 192 && c <= 255) || c == 168 || c == 184); // 192 - 255 ru letters w/o ё Ё
 }
 
 bool validate_word(char *word, int len)
@@ -35,21 +25,19 @@ bool validate_word(char *word, int len)
         return false;
     if (!is_palindrome(word, len))
         return false;
-    int i = 0;
-    while (word[i])
+    for(int i = 0;i<len;++i)
     {
         if (!is_cyrillic(word[i]))
             return false;
-        ++i;
     }
     return true;
 }
 
-std::vector<char *> process_text(const char *text)
+std::vector<char *> process_text(const char *text, int size)
 {
     int i = 0;
     std::vector<char *> list;
-    char *word = new char[MAX_WORD_LENGTH];
+    char *word = new char[size];
     int cur = 0;
     while (text[i])
     {
@@ -57,10 +45,10 @@ std::vector<char *> process_text(const char *text)
         {
             word[cur] = 0;
             if (validate_word(word, cur))
-                list.push_back(word);
+                list.push_back(word); // correct words to vec
             else
                 delete[] word;
-            word = new char[MAX_WORD_LENGTH];
+            word = new char[size];
             cur = 0;
         }
         else
@@ -81,9 +69,9 @@ std::vector<char *> process_text(const char *text)
 
 void delete_list(std::vector<char *> &list)
 {
-    for (auto &a : list)
+    for (size_t i = 0;i<list.size();++i)
     {
-        delete[] a;
+        delete[] list[i];
     }
 }
 
@@ -91,14 +79,24 @@ int main(int argc, char const *argv[])
 {
     std::ifstream input("input.txt");
     std::ofstream output("output.txt");
-    char text[MAX_TEXT_LENGTH];
-    input.getline(text, 1000, '\0');
-    std::vector<char *> list = process_text(text);
-    for (auto &i : list)
+    int size;
+    char temp;
+    while(input >> temp) // подсчет кол-ва элементов
     {
-        std::cout << i << ' ';
-        output << i << ' ';
+        ++size;
     }
+    ++size;
+    input.clear();
+    input.seekg(0);
+    char* text = new char[size];
+    input.getline(text, size, '\0');
+    std::vector<char *> list = process_text(text, size);
+    for (size_t i=0;i<list.size();++i)
+    {
+        std::cout << list[i] << ' ';
+        output << list[i] << ' ';
+    }
+    delete[] text;
     delete_list(list);
     return 0;
 }
