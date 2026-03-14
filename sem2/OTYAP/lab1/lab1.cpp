@@ -45,7 +45,7 @@ std::vector<char *> process_text(const char *text, int size)
         {
             word[cur] = 0;
             if (validate_word(word, cur))
-                list.push_back(word); // correct words to vec
+                list.push_back(word);
             else
                 delete[] word;
             word = new char[size];
@@ -79,9 +79,9 @@ int main(int argc, char const *argv[])
 {
     std::ifstream input("input.txt");
     std::ofstream output("output.txt");
-    int size;
+    int size = 0;
     char temp;
-    while(input >> temp) // подсчет кол-ва элементов
+    while(input.get(temp)) // count size
     {
         ++size;
     }
