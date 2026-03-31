@@ -13,43 +13,50 @@ List *push(List *p, int val)
     List *new_node = new List;
     new_node->val = val;
     if (p == nullptr)
-    {                              // если список пустой
-        new_node->next = new_node; // новый элемент указывает на себя
-        return new_node;           // возвращаем новый элемент как начало списка
+    {
+        new_node->next = new_node;
+        return new_node;
     }
     new_node->next = p->next;
     p->next = new_node;
     return p;
 }
 
-void delete_list(List *p)
+void delete_list(List *head)
 {
-    if (p == nullptr)
+    if (head == nullptr)
         return; // если список пустой, ничего не удаляем
-    List *current = p->next;
-    while (current != p)
+    List *current = head->next->next;
+    while (current != head->next)
     {
         List *temp = current;
         current = current->next;
         delete temp;
     }
-    delete p;
+    delete current;
+    delete head;
 }
 
-void print_list(List *p, std::ostream &output)
+void print_list(List *head, std::ostream &output)
 {
-    if (p == nullptr)
+    if (head == nullptr)
         return; // если список пустой, ничего не выводим
-    List *current = p;
+    List *current = head->next;
     do
     {
         output << current->val << " ";
         current = current->next;
-    } while (current != p);
+    } while (current != head->next);
 }
-
+/// @brief Чтение и создание односвязного циклического списка из входного потока.
+/// Возвращает голову списка, на которую ничего не указывает
+/// @param input
+/// @param size
+/// @return
 List *read_SLCL(std::istream &input, int &size)
 {
+    List *head = new List; // создаем фиктивный узел, который будет служить началом списка
+    head->val = 0;         // пустая голова
     List *list = nullptr;
     int val;
     size = 0;
@@ -59,10 +66,21 @@ List *read_SLCL(std::istream &input, int &size)
         list = list->next;
         size++;
     }
-    return list; // возвращаем указатель на последний добавленный элемент, который является конечным элементом списка
+    head->next = list->next;
+    return head;
 }
 
-void swap_nodes(List *prev1, List *prev2)
+List *get_end(List *head)
+{
+    List *current = head->next;
+    while (current->next != head->next) // пока не достигнем последнего элемента (который указывает на head)
+    {
+        current = current->next;
+    }
+    return current; // возвращаем указатель на последний элемент
+}
+
+void swap_nodes(List *prev1, List *prev2, List *head)
 {
     if (prev1 == prev2)
         return;
@@ -72,6 +90,11 @@ void swap_nodes(List *prev1, List *prev2)
 
     if (a == b)
         return; // один и тот же узел
+
+    if (head->next == a)
+        head->next = b;
+    else if (head->next == b)
+        head->next = a;
 
     // СЛУЧАЙ 1: a перед b (соседи)
     if (a->next == b)
@@ -117,18 +140,18 @@ int main(int argc, char const *argv[])
     int n = 0;
     input >> n; // ключ для сортировки (0 - быстрая сортировка, 1 - сортировка пузырьком)
     int size = 0;
-    List *end = read_SLCL(input, size);
-    List *begin = end->next;
+    List *head = read_SLCL(input, size);
+    List *end = get_end(head);
     input.close();
-    if (begin)
+    if (head->next)
     {
         std::ofstream output("output.txt");
-        print_list(begin, output);
+        print_list(head, output);
         output << std::endl;
-        swap_nodes(end, end->next);
-        print_list(begin, output);
+        swap_nodes(end, end->next, head);
+        print_list(head, output);
         output.close();
     }
-    // delete_list(end);
+    delete_list(head);
     return 0;
 }
