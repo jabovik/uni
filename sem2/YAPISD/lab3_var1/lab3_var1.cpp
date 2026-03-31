@@ -1,6 +1,7 @@
 // Односвязный циклический список.
 // Быстрая сортировка и сортировка пузырьком.
 #include <fstream>
+#include <iostream>
 
 struct List
 {
@@ -95,7 +96,8 @@ void swap_nodes(List *prev1, List *prev2, List *head)
         head->next = b;
     else if (head->next == b)
         head->next = a;
-
+    // Необходимо учесть все случаи, т.к если все узлы будем
+    // рассматривать как случай 3, то список может сломатся, один из узлов может указывать на себя
     // СЛУЧАЙ 1: a перед b (соседи)
     if (a->next == b)
     {
@@ -122,18 +124,33 @@ void swap_nodes(List *prev1, List *prev2, List *head)
     prev1->next = b;
     prev2->next = a;
 }
-/*
+
 List *list_quicksort(List *list);
 
-List *list_bubblesort(List *begin, List *end)
+void list_bubble_sort(List *head, List *end)
 {
-    List* new_head; // новый указатель будет указывать на минимальный элемент списка (начальный)
+    if (head->next == end)
+        return; // если список пустой или содержит один элемент, сортировка не требуется
     bool swapped;
     List *prev = end;
-    List *current = begin;
-    new_head = begin;
+    do
+    {
+        swapped = false;
+        while (prev->next->next != head->next) // пока не достигнем конца списка
+        {
+            if (prev->next->val > prev->next->next->val)
+            {
+                swap_nodes(prev, prev->next, head);
+                print_list(head, std::cout);
+                std::cout << std::endl;
+                swapped = true;
+            }
+            prev = prev->next;
+        }
+        prev = prev->next;
+    } while (swapped); // повторяем, пока были обмены
 }
-    */
+
 int main(int argc, char const *argv[])
 {
     std::ifstream input("input.txt");
@@ -148,7 +165,9 @@ int main(int argc, char const *argv[])
         std::ofstream output("output.txt");
         print_list(head, output);
         output << std::endl;
-        swap_nodes(end, end->next, head);
+        // swap_nodes(end, end->next, head);
+        // print_list(head, output);
+        list_bubble_sort(head, end);
         print_list(head, output);
         output.close();
     }
