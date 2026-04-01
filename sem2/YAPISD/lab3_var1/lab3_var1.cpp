@@ -23,41 +23,49 @@ List *push(List *p, int val)
     return p;
 }
 
+List *push(List *p, List *node)
+{
+    if (p == nullptr)
+    {
+        node->next = node;
+        return node;
+    }
+    node->next = p->next;
+    p->next = node;
+    return p;
+}
+
 void delete_list(List *head)
 {
     if (head == nullptr)
         return; // если список пустой, ничего не удаляем
-    List *current = head->next->next;
-    while (current != head->next)
+    List *current = head->next;
+    while (current != head)
     {
         List *temp = current;
         current = current->next;
         delete temp;
     }
     delete current;
-    delete head;
 }
 
 void print_list(List *head, std::ostream &output)
 {
     if (head == nullptr)
         return; // если список пустой, ничего не выводим
-    List *current = head->next;
+    List *current = head;
     do
     {
         output << current->val << " ";
         current = current->next;
-    } while (current != head->next);
+    } while (current != head);
 }
 /// @brief Чтение и создание односвязного циклического списка из входного потока.
-/// Возвращает голову списка, на которую ничего не указывает
 /// @param input
 /// @param size
 /// @return
 List *read_SLCL(std::istream &input, int &size)
 {
-    List *head = new List; // создаем фиктивный узел, который будет служить началом списка
-    head->val = 0;         // пустая голова
     List *list = nullptr;
     int val;
     size = 0;
@@ -67,21 +75,21 @@ List *read_SLCL(std::istream &input, int &size)
         list = list->next;
         size++;
     }
-    head->next = list->next;
+    List* head = list->next;
     return head;
 }
 
 List *get_end(List *head)
 {
-    List *current = head->next;
-    while (current->next != head->next) // пока не достигнем последнего элемента (который указывает на head)
+    List *current = head;
+    while (current->next != head) // пока не достигнем последнего элемента (который указывает на head)
     {
         current = current->next;
     }
     return current; // возвращаем указатель на последний элемент
 }
 
-void swap_nodes(List *prev1, List *prev2, List *head)
+void swap_nodes(List *prev1, List *prev2, List *&head)
 {
     if (prev1 == prev2)
         return;
@@ -92,10 +100,10 @@ void swap_nodes(List *prev1, List *prev2, List *head)
     if (a == b)
         return; // один и тот же узел
 
-    if (head->next == a)
-        head->next = b;
-    else if (head->next == b)
-        head->next = a;
+    if (head == a)
+        head = b;
+    else if (head == b)
+        head = a;
     // Необходимо учесть все случаи, т.к если все узлы будем
     // рассматривать как случай 3, то список может сломатся, один из узлов может указывать на себя
     // СЛУЧАЙ 1: a перед b (соседи)
@@ -124,31 +132,71 @@ void swap_nodes(List *prev1, List *prev2, List *head)
     prev1->next = b;
     prev2->next = a;
 }
-
-List *list_quicksort(List *list);
-
-void list_bubble_sort(List *head, List *end)
+/// @brief рекурсивный quicksort
+/// @param head 
+void list_quicksort(List *&head)
 {
-    if (head->next == end)
+    if(head == nullptr || head->next == head)
         return; // если список пустой или содержит один элемент, сортировка не требуется
-    bool swapped;
+    List *pivot = head; // выбираем первый элемент в качестве опорного
+    List *less_tail = nullptr;
+    List *greater_tail = nullptr;
+    List *current = head->next;
+    int less_size = 0;
+    int greater_size = 0;
+    while(current != head)
+    {
+        List* next = current->next;
+        if (current->val < pivot->val)
+        {
+            less_tail = push(less_tail, current);
+            less_tail = less_tail->next;
+            less_size++;
+        }
+        else
+        {
+            greater_tail = push(greater_tail, current);
+            greater_tail = greater_tail->next;
+            greater_size++;
+        }
+        current = next;
+    }
+    List *less_head = less_tail ? less_tail->next : nullptr;
+    List *greater_head = greater_tail ? greater_tail->next : nullptr;
+    list_quicksort(less_head);
+    list_quicksort(greater_head);
+    // объединяем отсортированные части
+    
+}
+
+void list_bubble_sort(List *&head, int size) // голова передается по ссылке, т.к она может измениться при перестановке первого элемента
+{
+    // сортируем относительно головы
+    List *end = get_end(head);
+    if (head == end)
+        return; // если список пустой или содержит один элемент, сортировка не требуется
+    bool swapped = true;
+    bool once = false;
     List *prev = end;
-    do
+    for (int i = 0; (i < size - 1) && swapped; ++i)
     {
         swapped = false;
-        while (prev->next->next != head->next) // пока не достигнем конца списка
+        for (int j = 0; j < size - i - 1; ++j)
         {
             if (prev->next->val > prev->next->next->val)
             {
                 swap_nodes(prev, prev->next, head);
-                print_list(head, std::cout);
-                std::cout << std::endl;
                 swapped = true;
             }
             prev = prev->next;
         }
-        prev = prev->next;
-    } while (swapped); // повторяем, пока были обмены
+        if (!once) // для перестановок первого элемента нужен конец списка, который после первого прохода мог измениться.
+        {
+            once = true; // конец может изменться только после первого прохода, так что нужно поменять всего один раз
+            end = get_end(head);
+        }
+        prev = end;
+    }
 }
 
 int main(int argc, char const *argv[])
@@ -160,14 +208,13 @@ int main(int argc, char const *argv[])
     List *head = read_SLCL(input, size);
     List *end = get_end(head);
     input.close();
-    if (head->next)
+    if (head)
     {
         std::ofstream output("output.txt");
         print_list(head, output);
         output << std::endl;
-        // swap_nodes(end, end->next, head);
-        // print_list(head, output);
-        list_bubble_sort(head, end);
+        list_quicksort(head);
+        output << size << ' ';
         print_list(head, output);
         output.close();
     }
