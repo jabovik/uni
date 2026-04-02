@@ -60,10 +60,7 @@ void print_list(List *head, std::ostream &output)
         current = current->next;
     } while (current != head);
 }
-/// @brief Чтение и создание односвязного циклического списка из входного потока.
-/// @param input
-/// @param size
-/// @return
+/// @brief чтение и создание односвязного циклического списка из входного потока.
 List *read_SLCL(std::istream &input, int &size)
 {
     List *list = nullptr;
@@ -75,7 +72,7 @@ List *read_SLCL(std::istream &input, int &size)
         list = list->next;
         size++;
     }
-    List* head = list->next;
+    List *head = list->next;
     return head;
 }
 
@@ -104,9 +101,9 @@ void swap_nodes(List *prev1, List *prev2, List *&head)
         head = b;
     else if (head == b)
         head = a;
-    // Необходимо учесть все случаи, т.к если все узлы будем
+    // необходимо учесть все случаи, т.к если все узлы будем
     // рассматривать как случай 3, то список может сломатся, один из узлов может указывать на себя
-    // СЛУЧАЙ 1: a перед b (соседи)
+    // случай 1: a перед b (соседи)
     if (a->next == b)
     {
         prev1->next = b;
@@ -115,7 +112,7 @@ void swap_nodes(List *prev1, List *prev2, List *&head)
         return;
     }
 
-    // СЛУЧАЙ 2: b перед a (соседи)
+    // случай 2: b перед a (соседи)
     if (b->next == a)
     {
         prev2->next = a;
@@ -124,7 +121,7 @@ void swap_nodes(List *prev1, List *prev2, List *&head)
         return;
     }
 
-    // СЛУЧАЙ 3: не соседи
+    // случай 3: не соседи
     List *temp = a->next;
     a->next = b->next;
     b->next = temp;
@@ -133,20 +130,20 @@ void swap_nodes(List *prev1, List *prev2, List *&head)
     prev2->next = a;
 }
 /// @brief рекурсивный quicksort
-/// @param head 
+/// @param head т.к нужно менять связи а не значения, голову списка передаем по ссылке, чтобы её изменить на min элемент
 void list_quicksort(List *&head)
 {
-    if(head == nullptr || head->next == head)
-        return; // если список пустой или содержит один элемент, сортировка не требуется
+    if (head == nullptr || head->next == head)
+        return;         // если список пустой или содержит один элемент, сортировка не требуется
     List *pivot = head; // выбираем первый элемент в качестве опорного
     List *less_tail = nullptr;
     List *greater_tail = nullptr;
     List *current = head->next;
     int less_size = 0;
     int greater_size = 0;
-    while(current != head)
+    while (current != head)
     {
-        List* next = current->next;
+        List *next = current->next;
         if (current->val < pivot->val)
         {
             less_tail = push(less_tail, current);
@@ -166,7 +163,19 @@ void list_quicksort(List *&head)
     list_quicksort(less_head);
     list_quicksort(greater_head);
     // объединяем отсортированные части
-    
+    less_tail = less_head ? get_end(less_head) : nullptr;
+    greater_tail = greater_head ? get_end(greater_head) : nullptr;
+    if (less_tail) // если есть элементы меньше опорного, то они должны идти перед ним
+    {
+        less_tail->next = pivot; // опорный элемент идет после всех меньших
+        pivot->next = less_head; // замыкаем список меньших элементов
+        head = less_head;        // новый head - это голова списка меньших элементов. При этом указатель pivot остаётся там же.
+    }
+    if (greater_tail) // если есть элементы больше или равные опорному, то они должны идти после него
+    {
+        greater_tail->next = head; // замыкаем список больших элементов
+        pivot->next = greater_head; // опорный элемент идет перед всеми большими
+    }
 }
 
 void list_bubble_sort(List *&head, int size) // голова передается по ссылке, т.к она может измениться при перестановке первого элемента
@@ -206,14 +215,14 @@ int main(int argc, char const *argv[])
     input >> n; // ключ для сортировки (0 - быстрая сортировка, 1 - сортировка пузырьком)
     int size = 0;
     List *head = read_SLCL(input, size);
-    List *end = get_end(head);
     input.close();
     if (head)
     {
         std::ofstream output("output.txt");
-        print_list(head, output);
-        output << std::endl;
-        list_quicksort(head);
+        if(n)
+            list_bubble_sort(head, size);
+        else
+            list_quicksort(head);
         output << size << ' ';
         print_list(head, output);
         output.close();
