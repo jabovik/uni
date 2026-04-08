@@ -43,30 +43,46 @@ bool is_delim(unsigned char c) {
 }
 const int STACK_SIZE = 6;
 const int SIGNALS_NUM = 2;
-const int STATES_NUM = 3; // временно
+const int STATES_NUM = 9; // временно
 const int STACK_STATES_NUM = 3;
+const int WORD_MAX_SIZE = 6;
 
 enum Signals{ALPHABETIC, DELIM};
-enum States {S_BEGIN, S_END, S_FAIL, S_PUSH, S_POP, S_GOOD, S_REPUSH, S_DOUBLE_PUSH, S_DOUBLE_PUSH2};
+enum States {S_BEGIN, S_END, S_OOR, S_FAIL, S_PUSH, S_POP, S_GOOD, S_REPUSH, S_DOUBLE_PUSH, S_DOUBLE_PUSH2};
 enum StackStates {MATCH, DIFF, EMPTY};
+enum Result {GOOD, FAIL, CONTINUE};
 
-void create_table2(States (*table)[STATES_NUM][STACK_STATES_NUM])
+StackStates compare(char c, char stack_top)
+{
+    if (stack_top == c) return MATCH;
+    if (!stack_top) return EMPTY;
+    return DIFF;
+}
+
+Signals det_signal(char c)
+{
+    if (is_cyrillic(c)) return ALPHABETIC;
+    if (is_delim(c)) return DELIM;
+    return DELIM; // для всех остальных символов считаем, что это разделитель
+}
+void create_table2(States (*table)[STATES_NUM][STACK_STATES_NUM]) // 1 или 2 символа
 {
     table[ALPHABETIC][S_BEGIN][EMPTY] = S_PUSH; // начало, слова, пишем в стек
-    table[ALPHABETIC][S_PUSH][MATCH] = S_END; // совпадение с 1 символом
+    table[ALPHABETIC][S_PUSH][MATCH] = S_POP; // совпадение с 1 символом
+    table[DELIM][S_PUSH][DIFF] = S_GOOD; // если после 1 символа стоит разделитель, то слово подходит
     table[ALPHABETIC][S_PUSH][DIFF] = S_FAIL; // несовпадение с 1 символом
-    table[DELIM][S_END][EMPTY] = S_GOOD; // если после 2 символа стоит разделитель, то слово подходит
-    table[ALPHABETIC][S_END][EMPTY] = S_FAIL; // если после 2 символа стоит буква, то слово не подходит
+    table[DELIM][S_POP][EMPTY] = S_GOOD; // если после 2 символа стоит разделитель, то слово подходит
+    table[ALPHABETIC][S_POP][EMPTY] = S_FAIL; // если после 2 символа стоит буква, то слово не подходит
 }
 void create_table3(States (*table)[STATES_NUM][STACK_STATES_NUM])
 {
     table[ALPHABETIC][S_BEGIN][EMPTY] = S_PUSH; // начало, слова, пишем в стек
     table[ALPHABETIC][S_PUSH][MATCH] = S_REPUSH; // середина не важна
     table[ALPHABETIC][S_PUSH][DIFF] = S_REPUSH;
-    table[ALPHABETIC][S_REPUSH][MATCH] = S_END; // совпадение с 3 символом.
+    table[ALPHABETIC][S_REPUSH][MATCH] = S_POP; // совпадение с 3 символом.
     table[ALPHABETIC][S_REPUSH][DIFF] = S_FAIL; // несовпадение с 3 символом
-    table[DELIM][S_END][EMPTY] = S_GOOD; // если после 3 символа стоит разделитель, то слово подходит
-    table[ALPHABETIC][S_END][EMPTY] = S_FAIL; // если после 3 символа стоит буква, то слово не подходит
+    table[DELIM][S_POP][EMPTY] = S_GOOD; // если после 3 символа стоит разделитель, то слово подходит
+    table[ALPHABETIC][S_POP][EMPTY] = S_FAIL; // если после 3 символа стоит буква, то слово не подходит
 }
 void create_table4(States (*table)[STATES_NUM][STACK_STATES_NUM])
 {
@@ -75,10 +91,10 @@ void create_table4(States (*table)[STATES_NUM][STACK_STATES_NUM])
     table[ALPHABETIC][S_PUSH][DIFF] = S_DOUBLE_PUSH;
     table[ALPHABETIC][S_DOUBLE_PUSH][MATCH] = S_POP; // совпадение с 3 символом.
     table[ALPHABETIC][S_DOUBLE_PUSH][DIFF] = S_FAIL; // несовпадение с 3 символом
-    table[ALPHABETIC][S_POP][MATCH] = S_END; // совпадение с 4 символом.
+    table[ALPHABETIC][S_POP][MATCH] = S_POP; // совпадение с 4 символом.
     table[ALPHABETIC][S_POP][DIFF] = S_FAIL; // несовпадение с 4 символом
-    table[DELIM][S_END][EMPTY] = S_GOOD; // если после 4 символа стоит разделитель, то слово подходит
-    table[ALPHABETIC][S_END][EMPTY] = S_FAIL; // если после 4 символа стоит буква, то слово не подходит
+    table[DELIM][S_POP][EMPTY] = S_GOOD; // если после 4 символа стоит разделитель, то слово подходит
+    table[ALPHABETIC][S_POP][EMPTY] = S_FAIL; // если после 4 символа стоит буква, то слово не подходит
 }
 void create_table5(States (*table)[STATES_NUM][STACK_STATES_NUM])
 {
@@ -89,10 +105,10 @@ void create_table5(States (*table)[STATES_NUM][STACK_STATES_NUM])
     table[ALPHABETIC][S_DOUBLE_PUSH][DIFF] = S_REPUSH;
     table[ALPHABETIC][S_REPUSH][MATCH] = S_POP; // совпадение с 4 символом.
     table[ALPHABETIC][S_REPUSH][DIFF] = S_FAIL; // несовпадение с 4 символом
-    table[ALPHABETIC][S_POP][MATCH] = S_END; // совпадение с 5 символом.
-    table[ALPHABETIC][S_POP][DIFF] = S_FAIL; // несовпадение с 5 символом
-    table[DELIM][S_END][EMPTY] = S_GOOD; // если после 5 символа стоит разделитель, то слово подходит
-    table[ALPHABETIC][S_END][EMPTY] = S_FAIL; // если после 5 символа стоит буква, то слово не подходит
+    table[ALPHABETIC][S_POP][MATCH] = S_POP; // совпадение с 5 символом.
+    table[ALPHABETIC][S_POP][DIFF] = S_POP; // несовпадение с 5 символом
+    table[DELIM][S_POP][EMPTY] = S_GOOD; // если после 5 символа стоит разделитель, то слово подходит
+    table[ALPHABETIC][S_POP][EMPTY] = S_FAIL; // если после 5 символа стоит буква, то слово не подходит
 }
 void create_table6(States (*table)[STATES_NUM][STACK_STATES_NUM])
 {
@@ -105,21 +121,72 @@ void create_table6(States (*table)[STATES_NUM][STACK_STATES_NUM])
     table[ALPHABETIC][S_DOUBLE_PUSH2][MATCH] = S_POP; // совпадение с 4 символом.
     table[ALPHABETIC][S_POP][MATCH] = S_POP; // совпадение с 5 символом.
     table[ALPHABETIC][S_POP][DIFF] = S_FAIL; // несовпадение с 5 символом
-    table[DELIM][S_POP][EMPTY] = S_GOOD; // совпадение с
+    table[DELIM][S_POP][EMPTY] = S_GOOD; // если после 6 символа стоит разделитель, то слово подходит
+    table[ALPHABETIC][S_POP][EMPTY] = S_FAIL; // если после 6 символа стоит буква, то слово не подходит
 }
-States PDA_process_word(States (*table)[STATES_NUM][STACK_STATES_NUM], char* word)
+Result PDA_process_word(States (*table)[STATES_NUM][STACK_STATES_NUM], char* word)
 {
     States state = S_BEGIN;
     Signals signal;
     StackStates stack_state;
     int stack[STACK_SIZE];
-    stack[0] = '\0'; // начальное состояние стека
+    int stack_top = 0;
+    stack[stack_top] = 0; // начальное состояние стека
+    while(state != S_FAIL && state != S_GOOD)
+    {
+        signal = det_signal(*word);
+        stack_state = compare(*word, stack[stack_top]);
+        state = table[signal][state][stack_state];
+        switch(state)
+        {
+            case S_PUSH: 
+                stack[stack_top++] = *word;
+                break;
+            case S_DOUBLE_PUSH:
+            case S_DOUBLE_PUSH2:
+                stack[++stack_top] = *word;
+                break;
+            case S_POP:
+                stack[stack_top--] = 0;
+                break;
+            default:
+                stack[stack_top--] = 0;
+        }
+        ++word;
+    }
+    switch(state)
+    {
+        case S_GOOD: return GOOD;
+        case S_FAIL: return FAIL;
+        case S_END: return CONTINUE;
+        default: throw("unexpected state");
+    }
+}
 
+char* copy_word(char* begin, char* end)
+{
+    int len = end - begin;
+    char* word = new char[len + 1];
+    for(int i = 0;i<len;++i)
+    {
+        word[i] = begin[i];
+    }
+    word[len] = '\0';
+    return word;
 }
 
 std::vector<char*> compile(char* text)
 {
     std::vector<char*> vec;
+    States table[SIGNALS_NUM][STATES_NUM][STACK_STATES_NUM];
+    create_table2(table);
+    char* word_begin;
+    while(*text)
+    {
+        while(is_delim(*text)) ++text;
+        word_begin = text;
+        
+    }
     return vec;
 }
 
