@@ -21,7 +21,6 @@
 */
 
 #include <fstream>
-#include <iostream>
 #include <vector>
 
 char* read_file(std::ifstream &input, int &size) {
@@ -52,7 +51,7 @@ bool is_delim(unsigned char c) {
 	return c == ' ' || c == '\n' || c == '\t';
 }
 const int STACK_SIZE = 6;
-const int SIGNALS_NUM = 2;
+const int SIGNALS_NUM = 3;
 const int STATES_NUM = 10; // временно
 const int STACK_STATES_NUM = 3;
 const int WORD_MAX_SIZE = 6;
@@ -74,8 +73,7 @@ StackStates compare(char c, char stack_top)
 
 Signals det_signal(char c)
 {
-    //if (is_cyrillic(c)) return ALPHABETIC;
-    if (isalpha(c)) return ALPHABETIC;
+    if (is_cyrillic(c)) return ALPHABETIC;
     if (is_delim(c)) return DELIM;
     return DELIM; // для всех остальных символов считаем, что это разделитель
 }
@@ -187,7 +185,6 @@ Result PDA_process_word(States (*table)[STATES_NUM][STACK_STATES_NUM], char *&wo
     {
         signal = det_signal(*word);
         stack_state = compare(*word, stack[stack_top]);
-        std::cout << "signal: " << signal << " state: " << state << " stack_state: " << stack_state << " word: "<< *word << std::endl;
         state = table[signal][state][stack_state];
         switch(state)
         {
@@ -254,14 +251,12 @@ std::vector<char*> compile(char* text)
                 case 3: create_table5(table); break;
                 case 4: create_table6(table); break;
             }
-            std::cout << "Trying table " << table_select << std::endl;
             res = PDA_process_word(table, word);
         } while (res == CONTINUE && table_select<WORD_MAX_SIZE-2);
         if(res == GOOD)
         {
             vec.push_back(copy_word(text, word));
         }
-        std::cout << "WORD PROCESSED" << std::endl;
         text = word;
         while (!is_delim(*text) && *text != '\0') ++text;
     }
