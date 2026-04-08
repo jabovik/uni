@@ -41,11 +41,87 @@ bool is_cyrillic(unsigned char c)
 bool is_delim(unsigned char c) {
 	return c == ' ' || c == '\n' || c == '\t' || c == '\0';
 }
+const int STACK_SIZE = 6;
+const int SIGNALS_NUM = 2;
+const int STATES_NUM = 3; // временно
+const int STACK_STATES_NUM = 3;
 
+enum Signals{ALPHABETIC, DELIM};
+enum States {S_BEGIN, S_END, S_FAIL, S_PUSH, S_POP, S_GOOD, S_REPUSH, S_DOUBLE_PUSH, S_DOUBLE_PUSH2};
+enum StackStates {MATCH, DIFF, EMPTY};
 
-std::vector<char*> compile();
+void create_table2(States (*table)[STATES_NUM][STACK_STATES_NUM])
+{
+    table[ALPHABETIC][S_BEGIN][EMPTY] = S_PUSH; // начало, слова, пишем в стек
+    table[ALPHABETIC][S_PUSH][MATCH] = S_END; // совпадение с 1 символом
+    table[ALPHABETIC][S_PUSH][DIFF] = S_FAIL; // несовпадение с 1 символом
+    table[DELIM][S_END][EMPTY] = S_GOOD; // если после 2 символа стоит разделитель, то слово подходит
+    table[ALPHABETIC][S_END][EMPTY] = S_FAIL; // если после 2 символа стоит буква, то слово не подходит
+}
+void create_table3(States (*table)[STATES_NUM][STACK_STATES_NUM])
+{
+    table[ALPHABETIC][S_BEGIN][EMPTY] = S_PUSH; // начало, слова, пишем в стек
+    table[ALPHABETIC][S_PUSH][MATCH] = S_REPUSH; // середина не важна
+    table[ALPHABETIC][S_PUSH][DIFF] = S_REPUSH;
+    table[ALPHABETIC][S_REPUSH][MATCH] = S_END; // совпадение с 3 символом.
+    table[ALPHABETIC][S_REPUSH][DIFF] = S_FAIL; // несовпадение с 3 символом
+    table[DELIM][S_END][EMPTY] = S_GOOD; // если после 3 символа стоит разделитель, то слово подходит
+    table[ALPHABETIC][S_END][EMPTY] = S_FAIL; // если после 3 символа стоит буква, то слово не подходит
+}
+void create_table4(States (*table)[STATES_NUM][STACK_STATES_NUM])
+{
+    table[ALPHABETIC][S_BEGIN][EMPTY] = S_PUSH; // начало, слова, пишем в стек
+    table[ALPHABETIC][S_PUSH][MATCH] = S_DOUBLE_PUSH; // 2 символ
+    table[ALPHABETIC][S_PUSH][DIFF] = S_DOUBLE_PUSH;
+    table[ALPHABETIC][S_DOUBLE_PUSH][MATCH] = S_POP; // совпадение с 3 символом.
+    table[ALPHABETIC][S_DOUBLE_PUSH][DIFF] = S_FAIL; // несовпадение с 3 символом
+    table[ALPHABETIC][S_POP][MATCH] = S_END; // совпадение с 4 символом.
+    table[ALPHABETIC][S_POP][DIFF] = S_FAIL; // несовпадение с 4 символом
+    table[DELIM][S_END][EMPTY] = S_GOOD; // если после 4 символа стоит разделитель, то слово подходит
+    table[ALPHABETIC][S_END][EMPTY] = S_FAIL; // если после 4 символа стоит буква, то слово не подходит
+}
+void create_table5(States (*table)[STATES_NUM][STACK_STATES_NUM])
+{
+    table[ALPHABETIC][S_BEGIN][EMPTY] = S_PUSH; // начало, слова, пишем в стек
+    table[ALPHABETIC][S_PUSH][MATCH] = S_DOUBLE_PUSH; // 2 символ
+    table[ALPHABETIC][S_PUSH][DIFF] = S_DOUBLE_PUSH;
+    table[ALPHABETIC][S_DOUBLE_PUSH][MATCH] = S_REPUSH; // середина не важна
+    table[ALPHABETIC][S_DOUBLE_PUSH][DIFF] = S_REPUSH;
+    table[ALPHABETIC][S_REPUSH][MATCH] = S_POP; // совпадение с 4 символом.
+    table[ALPHABETIC][S_REPUSH][DIFF] = S_FAIL; // несовпадение с 4 символом
+    table[ALPHABETIC][S_POP][MATCH] = S_END; // совпадение с 5 символом.
+    table[ALPHABETIC][S_POP][DIFF] = S_FAIL; // несовпадение с 5 символом
+    table[DELIM][S_END][EMPTY] = S_GOOD; // если после 5 символа стоит разделитель, то слово подходит
+    table[ALPHABETIC][S_END][EMPTY] = S_FAIL; // если после 5 символа стоит буква, то слово не подходит
+}
+void create_table6(States (*table)[STATES_NUM][STACK_STATES_NUM])
+{
+    table[ALPHABETIC][S_BEGIN][EMPTY] = S_PUSH; // начало, слова, пишем в стек
+    table[ALPHABETIC][S_PUSH][MATCH] = S_DOUBLE_PUSH; // 2 символ
+    table[ALPHABETIC][S_PUSH][DIFF] = S_DOUBLE_PUSH;
+    table[ALPHABETIC][S_PUSH][MATCH] = S_DOUBLE_PUSH2; // 3 символ
+    table[ALPHABETIC][S_PUSH][DIFF] = S_DOUBLE_PUSH2;
+    table[ALPHABETIC][S_DOUBLE_PUSH2][DIFF] = S_FAIL;
+    table[ALPHABETIC][S_DOUBLE_PUSH2][MATCH] = S_POP; // совпадение с 4 символом.
+    table[ALPHABETIC][S_POP][MATCH] = S_POP; // совпадение с 5 символом.
+    table[ALPHABETIC][S_POP][DIFF] = S_FAIL; // несовпадение с 5 символом
+    table[DELIM][S_POP][EMPTY] = S_GOOD; // совпадение с
+}
+States PDA_process_word(States (*table)[STATES_NUM][STACK_STATES_NUM], char* word)
+{
+    States state = S_BEGIN;
+    Signals signal;
+    StackStates stack_state;
+    int stack[STACK_SIZE];
+    stack[0] = '\0'; // начальное состояние стека
 
+}
 
+std::vector<char*> compile(char* text)
+{
+    std::vector<char*> vec;
+    return vec;
+}
 
 int main(int argc, char const *argv[])
 {
