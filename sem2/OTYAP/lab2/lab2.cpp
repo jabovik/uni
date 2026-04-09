@@ -109,7 +109,7 @@ Signals det_signal(char c)
         return ALPHABETIC;
     if (is_delim(c))
         return DELIM;
-    return DELIM; // для всех остальных символов считаем, что это разделитель
+    return UNIDENTIFIED;
 }
 
 void table_unidentified(States (*table)[STATES_NUM][STACK_STATES_NUM])
@@ -211,7 +211,7 @@ Result PDA_process_word(States (*table)[STATES_NUM][STACK_STATES_NUM], char *&wo
     States state = S_BEGIN;
     Signals signal;
     StackStates stack_state;
-    int stack[STACK_SIZE + 1];
+    char stack[STACK_SIZE + 1];
     int stack_top = 0;
     stack[stack_top] = 0;   // перед стеком всегда 0, чтобы не проверять на выход за границы
     stack[++stack_top] = 0; // начальное состояние стека
@@ -285,7 +285,7 @@ std::vector<char *> compile(char *text)
             ++table_select;
             create_table(table, table_select);
             res = PDA_process_word(table, word);
-        } while (res == CONTINUE && table_select < WORD_MAX_SIZE - 2);
+        } while (res == CONTINUE && table_select < WORD_MAX_SIZE);
         if (res == GOOD)
         {
             vec.push_back(copy_word(text, word));
