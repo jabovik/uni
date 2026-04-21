@@ -313,12 +313,12 @@ int main(int argc, char const *argv[])
     if (output)
     {
         print_vector(vec, output, vec.size());
-        for (int i = 0; i < vec.size(); ++i)
+        for (std::size_t i = 0; i < vec.size(); ++i)
             delete[] vec[i];
     }
     else
     {
-        for (int i = 0; i < vec.size(); ++i)
+        for (std::size_t i = 0; i < vec.size(); ++i)
             delete[] vec[i];
         return -1;
     }
