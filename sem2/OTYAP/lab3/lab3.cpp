@@ -13,6 +13,10 @@ char *read_file(std::ifstream &input, size_t &size)
     return buffer;
 }
 
+const int STATES_NUM = 8;
+const int SIGNALS_NUM = 6;
+const int MAX_LEN = 100;
+
 enum EState
 {
     S_INIT,   // начальное состояние
@@ -41,7 +45,7 @@ enum ELexType
     CO,
     EQ,
     AO,
-    CONST,
+    VL,
     INVALID,
 };
 
@@ -59,7 +63,7 @@ ESignal det_signal(char c)
         return ALPHABETIC;
     if (isdigit(c))
         return DIGIT;
-    if (c == ' ' || c == '\n' || c == '\t')
+    if (c == ' ' || c == '\n' || c == '\t' || c == '\0')
         return DELIM;
     if (c == '+' || c == '-' || c == '*' || c == '/')
         return SIGN;
@@ -76,7 +80,7 @@ ELexType state_to_type(EState state)
         return ID; // идентификатор может быть ключевым словом, но это можно проверить уже после определения типа лексемы
 
     case S_CONST:
-        return CONST;
+        return VL;
 
     case S_OPER:
         return AO;
@@ -97,17 +101,17 @@ const char* lex_type_to_str(ELexType type)
     switch (type)
     {
     case ID:
-        return "ID";
+        return "id";
     case KW:
-        return "KW";
+        return "kw";
     case CO:
-        return "CO";
+        return "co";
     case EQ:
-        return "EQ";
+        return "eq";
     case AO:
-        return "AO";
-    case CONST:
-        return "CONST";
+        return "ao";
+    case VL:
+        return "vl";
     default:
         return "INVALID";
     }
@@ -128,8 +132,7 @@ Lex *push(Lex *node, Lex *new_node)
         node->next = new_node;
         new_node->prev = node;
     }
-    else
-        return new_node;
+    return new_node;
 }
 
 Lex *push(Lex *node, char *str, ELexType type)
@@ -143,7 +146,7 @@ Lex *push(Lex *node, char *str, ELexType type)
 
 bool is_keyword(const char *str)
 {
-    const char *keywords[] = {"if", "else", "while", "for", "return"};
+    const char *keywords[] = {"if", "else", "while", "for", "return", "select", "end"};
     for (const char *kw : keywords)
     {
         if (strcmp(str, kw) == 0)
@@ -171,10 +174,6 @@ void print_list(Lex *head, std::ostream &output)
         head = head->next;
     }
 }
-
-const int STATES_NUM = 5;
-const int SIGNALS_NUM = 4;
-const int MAX_LEN = 100;
 void create_table(EState (*table)[STATES_NUM])
 {
     table[ALPHABETIC][S_INIT] = S_ID;
@@ -225,7 +224,7 @@ Lex *lexAnalysis(char *text, size_t size)
     Lex *tail = nullptr;
     Lex *head = nullptr;
     bool first = true;
-    while (*text)
+    for(size_t i = 0; i < size+1; ++i)
     {
         signal = det_signal(*text);
         lex_type = state_to_type(state);
@@ -245,8 +244,11 @@ Lex *lexAnalysis(char *text, size_t size)
                 tail = push(tail, lexem, lex_type); // добавляем лексему в список
             lexem[0] = '\0'; // очищаем строку для новой лексемы
             cur_lexem = lexem; // начинаем новую лексему
+            state = table[signal][S_INIT]; // начинаем работу из начального состояния
         }
-        *cur_lexem++ = *text++;
+        if(state != S_INIT)
+            *cur_lexem++ = *text;
+        text++;
     }
     return head;
 }
