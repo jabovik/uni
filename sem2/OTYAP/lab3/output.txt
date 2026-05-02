@@ -1,0 +1,3 @@
+do[kw] a[id] =[eq] 10[vl] ;[sc] b[id] =[eq] a[id] *[ao] 2[vl] ;[sc] c[id] =[eq] b[id] loop[kw] until[kw] not[kw] a[id]
+a b a c b a
+10 2

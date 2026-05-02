@@ -1,1 +1,5 @@
-while a<3 do
+do
+a = 10;
+b = a * 2;
+c = b
+loop until not a
