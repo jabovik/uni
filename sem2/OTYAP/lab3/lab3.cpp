@@ -248,8 +248,8 @@ void print_list(Lex *head, std::ostream &output, ELexType type)
         table[S_OPER][S_OPER_LESS] = S_FINISH;
         table[S_OPER_LESS][S_OPER_LESS] = S_FINISH;
         table[S_OPER_GREATER][S_OPER_LESS] = S_OPER2; // <> - валидный оператор
-        table[S_EQ][S_OPER_LESS] = S_OPER2;           // <= - валидный оператор
-        table[S_SC][S_OPER_LESS] = S_ERROR;
+        table[S_EQ][S_OPER_LESS] = S_FINISH;
+        table[S_SC][S_OPER_LESS] = S_FINISH;
         table[S_ERROR][S_OPER_LESS] = S_FINISH;
 
         table[S_ID][S_OPER_GREATER] = S_FINISH;
@@ -258,7 +258,7 @@ void print_list(Lex *head, std::ostream &output, ELexType type)
         table[S_OPER][S_OPER_GREATER] = S_FINISH;
         table[S_OPER_LESS][S_OPER_GREATER] = S_FINISH;
         table[S_OPER_GREATER][S_OPER_GREATER] = S_FINISH;
-        table[S_EQ][S_OPER_GREATER] = S_OPER2; // >= - валидный оператор
+        table[S_EQ][S_OPER_GREATER] = S_FINISH;
         table[S_SC][S_OPER_GREATER] = S_FINISH;
         table[S_ERROR][S_OPER_GREATER] = S_FINISH;
 
@@ -268,17 +268,17 @@ void print_list(Lex *head, std::ostream &output, ELexType type)
         table[S_OPER][S_EQ] = S_FINISH;
         table[S_OPER_LESS][S_EQ] = S_FINISH;
         table[S_OPER_GREATER][S_EQ] = S_FINISH;
-        table[S_EQ][S_EQ] = S_OPER2; // == - валидный оператор
+        table[S_EQ][S_EQ] = S_FINISH;
         table[S_SC][S_EQ] = S_FINISH;
         table[S_ERROR][S_EQ] = S_FINISH;
 
         table[S_ID][S_ERROR] = S_ERROR;
         table[S_CONST][S_ERROR] = S_ERROR;
         table[S_FINISH][S_ERROR] = S_FINISH; // разделитель сбрасывает ошибку
-        table[S_OPER][S_ERROR] = S_ERROR;
-        table[S_OPER_LESS][S_ERROR] = S_ERROR;
-        table[S_OPER_GREATER][S_ERROR] = S_ERROR;
-        table[S_EQ][S_ERROR] = S_ERROR;
+        table[S_OPER][S_ERROR] = S_FINISH;
+        table[S_OPER_LESS][S_ERROR] = S_FINISH;
+        table[S_OPER_GREATER][S_ERROR] = S_FINISH;
+        table[S_EQ][S_ERROR] = S_FINISH;
         table[S_SC][S_ERROR] = S_FINISH;
         table[S_ERROR][S_ERROR] = S_ERROR;
 
@@ -330,7 +330,7 @@ void print_list(Lex *head, std::ostream &output, ELexType type)
                 }
                 else if (lex_type == VL) // проверка на валидность константы (от -32 768 до 32 767)
                 {
-                    if (atol(lexem) < -32768 || atol(lexem) > 32767)
+                    if (atoi(lexem) > 32768) // более точная проверка - прерогатива синтаксического анализатора
                         lex_type = WL;
                 }
                 if (first)
